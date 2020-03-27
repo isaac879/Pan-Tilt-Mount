@@ -3,12 +3,16 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 #include <EEPROM.h> //To be able to save values when powered off
+#include <FastLED.h>
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 //Global scope
+CRGB leds[NUM_LEDS];
+
 AccelStepper stepper_pan = AccelStepper(1, PIN_STEP_PAN, PIN_DIRECTION_PAN);
 AccelStepper stepper_tilt = AccelStepper(1, PIN_STEP_TILT, PIN_DIRECTION_TILT);
+//AccelStepper stepper_slider = AccelStepper(1, PIN_STEP_SLIDER, PIN_DIRECTION_SLIDER);
 
 MultiStepper multi_stepper;
 
@@ -19,12 +23,14 @@ int current_moves_array_index = -1;
 char stringText[MAX_STRING_LENGTH + 1];
 float pan_steps_per_degree = (200.0 * SIXTEENTH_STEP * PAN_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
 float tilt_steps_per_degree = (200.0 * SIXTEENTH_STEP * TILT_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
+//float slider_steps_per_millimetre = (200.0 * SIXTEENTH_STEP) / (20 * 2); //Stepper motor has 200 steps per 360 degrees, the timing pully has 20 teeth and the belt has a pitch of 2mm
 int step_mode = 1;
 bool enable_state = true;
-long limit_pan_min = -2147483648;
-long limit_pan_max = 2147483647;
-long limit_tilt_min = -2147483648;
-long limit_tilt_max = 2147483647;
+float limit_pan_min = 0;
+float limit_pan_max = 0;
+float limit_tilt_min = 0;
+float limit_tilt_max = 0;
+byte enable_limits = 0;
 float pan_acceleration = 5000;
 float tilt_acceleration = 5000;
 float hall_pan_offset_degrees = 0;
@@ -35,6 +41,8 @@ byte enable_homing = 0;
 float pan_max_speed = 2000;
 float tilt_max_speed = 2000;
 long target_position[2];
+float degrees_per_picture = 0.5;
+unsigned long delay_ms_between_pictures = 1000;
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -50,31 +58,62 @@ void initPanTilt(void){
     pinMode(PIN_STEP_SLIDER, OUTPUT);
     pinMode(PIN_PAN_HALL, INPUT_PULLUP);
     pinMode(PIN_TILT_HALL, INPUT_PULLUP);
+    pinMode(PIN_SHUTTER_TRIGGER, OUTPUT);
+    digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
+    FastLED.addLeds<LED_TYPE, PIN_LED_DATA, COLOR_ORDER>(leds, NUM_LEDS);
+    FastLED.setBrightness(BRIGHTNESS);
+    LEDS.showColor(CHSV(160 , 255, 255)); //Set led to blue
     setEEPROMVariables();
     stepper_pan.setMinPulseWidth(20);
     stepper_tilt.setMinPulseWidth(20);
+    //stepper_slider.setMinPulseWidth(20);
     setStepMode(step_mode); //steping mode
     stepper_pan.setMaxSpeed(pan_max_speed);
     stepper_pan.setAcceleration(pan_acceleration);
     stepper_tilt.setMaxSpeed(tilt_max_speed);
     stepper_tilt.setAcceleration(tilt_acceleration);
+    //stepper_slider.setMaxSpeed(slider_max_speed);
+    //stepper_slider.setAcceleration(slider_acceleration);
     invertPanDirection(invert_pan);
     invertTiltDirection(invert_tilt);
     multi_stepper.addStepper(stepper_pan);
     multi_stepper.addStepper(stepper_tilt);
+    //multi_stepper.addStepper(stepper_slider);
     enableSteppers(true);
+    LEDS.showColor(CHSV(96 , 255, 255));
     printi(F("Setup complete.\n"));
     if(enable_homing == 1){
         printi(F("Beginning homing...\n"));
         if(findHome()){
             printi(F("Homing complete.\n"));
+            LEDS.showColor(CHSV(0 , 0, 255)); //White
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 0)); //off
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 255)); //White
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 0)); //off
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 255)); //White
+            delay(200);
         }
         else{
             stepper_pan.setCurrentPosition(0);
             stepper_tilt.setCurrentPosition(0);
             printi(F("Error finding home position... Current position has been set as home.\n"));
+            LEDS.showColor(CHSV(240 , 255, 255)); //pink
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 0)); //off
+            delay(200);
+            LEDS.showColor(CHSV(240 , 255, 255)); //pink
+            delay(200);
+            LEDS.showColor(CHSV(0 , 0, 0)); //off
+            delay(200);
+            LEDS.showColor(CHSV(240 , 255, 255)); //pink
+            delay(200);
         }
-    } 
+    }
+    ledBatteryLevel(getBatteryPercentage()); 
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -169,26 +208,15 @@ float tiltDegreesToSteps(float angle){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void statusReport(void){
-    printi(F("----------Status Report----------\n"));
-    printi(F("Step Mode: "), step_mode);
-    printi(F("pan_steps_per_degree: "), pan_steps_per_degree, 3, F("\n"));
-    printi(F("tilt_steps_per_degree: "), tilt_steps_per_degree, 3, F("\n"));
-    printi(F("Battery percentage: "), getBatteryPercentage(), 3, F("%\n"));
-    
-}
-
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
 void printProgramElements(void){
     printi(F("-----Program Elements-----\n"));
     for(int row = 0; row < moves_array_elements; row++){
-        printi(F(""), row, F(" |"));
-        printi(F(" Pan: "), program_elements[row].panStepCount, F(" steps\t"));
-        printi(F("Tilt: "), program_elements[row].tiltStepCount, F(" steps\t"));
-        printi(F("Pan Speed: "), program_elements[row].panSpeed, 3, F(" steps/sec\t"));
-        printi(F("Tilt Speed: "), program_elements[row].tiltSpeed, 3, F(" steps/sec\t"));  
-        printi(F("Delay: "), program_elements[row].msDelay, F(" |\n"));    
+        printi(F(""), row, F("\t|"));
+        printi(F(" Pan: "), panStepsToDegrees(program_elements[row].panStepCount), 3, F("º\t"));
+        printi(F("Tilt: "), tiltStepsToDegrees(program_elements[row].tiltStepCount), 3, F("º\t"));
+        printi(F("Pan Speed: "), panStepsToDegrees(program_elements[row].panSpeed), 3, F(" º/s\t"));
+        printi(F("Tilt Speed: "), tiltStepsToDegrees(program_elements[row].tiltSpeed), 3, F(" º/s\t"));  
+        printi(F("Delay: "), program_elements[row].msDelay, F("ms |\n"));    
     }
     printi(F("\n"));
 }
@@ -203,23 +231,36 @@ void debugReport(void){
     printi(F("Tilt Hall sensor state: "), digitalRead(PIN_TILT_HALL));
     printi(F("Pan step count: "), stepper_pan.currentPosition());
     printi("Tilt step count: ", stepper_tilt.currentPosition());
-    printi(F("Pan angle: "), panStepsToDegrees(stepper_pan.currentPosition()), 3, F("degrees\n"));
-    printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.currentPosition()), 3, F("degrees\n")); 
-    printi(F("Pan steps per degree: "), pan_steps_per_degree);
-    printi(F("Tilt steps per degree: "), tilt_steps_per_degree);
-    printi(F("Pan current steps/second: "), stepper_pan.speed());
-    printi(F("Tilt current steps/second: "), stepper_tilt.speed());
-    printi(F("Pan maximum steps/second: "), stepper_pan.maxSpeed());
-    printi(F("Tilt maximum steps/second: "), stepper_tilt.maxSpeed());
-    printi(F("Pan acceleration: "), pan_acceleration);
-    printi(F("Tilt acceleration: "), tilt_acceleration);
+    printi(F("Pan angle: "), panStepsToDegrees(stepper_pan.currentPosition()), 3, F("º\n"));
+    printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.currentPosition()), 3, F("º\n")); 
+    printi(F("Pan steps per º: "), pan_steps_per_degree);
+    printi(F("Tilt steps per º: "), tilt_steps_per_degree);
+    printi(F("Pan current steps/s: "), stepper_pan.speed());
+    printi(F("Tilt current steps/s: "), stepper_tilt.speed());
+    printi(F("Pan current º/s: "), panStepsToDegrees(stepper_pan.speed()));
+    printi(F("Tilt current º/s: "), tiltStepsToDegrees(stepper_tilt.speed()));
+    printi(F("Pan maximum steps/s: "), stepper_pan.maxSpeed());
+    printi(F("Tilt maximum steps/s: "), stepper_tilt.maxSpeed());
+    printi(F("Pan maximum º/s: "), panStepsToDegrees(stepper_pan.maxSpeed()));
+    printi(F("Tilt maximum º/s: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()));
+    printi(F("Pan acceleration steps/s/s: "), pan_acceleration);
+    printi(F("Tilt acceleration steps/s/s: "), tilt_acceleration);
+    printi(F("Pan acceleration steps/s/s: "), panStepsToDegrees(pan_acceleration));
+    printi(F("Tilt acceleration steps/s/s: "), tiltStepsToDegrees(tilt_acceleration));
+    printi(F("Pan min limit: "), limit_pan_min, 3, F("º\n"));
+    printi(F("Pan max limit: "), limit_pan_max, 3, F("º\n"));
+    printi(F("Tilt min limit: "), limit_tilt_min, 3, F("º\n"));
+    printi(F("Tilt max limit: "), limit_tilt_max, 3, F("º\n"));
+    printi(F("Enable limits: "), enable_limits);    
     printi(F("Pan invert direction: "), invert_pan);
     printi(F("Tilt invert direction: "), invert_tilt);
-    printi(F("Pan Hall offset: "), hall_pan_offset_degrees, 3, F("degrees\n"));
-    printi(F("Tilt Hall offset: "), hall_tilt_offset_degrees, 3, F("degrees\n"));  
+    printi(F("Pan Hall offset: "), hall_pan_offset_degrees, 3, F("º\n"));
+    printi(F("Tilt Hall offset: "), hall_tilt_offset_degrees, 3, F("º\n"));  
     printi(F("Battery voltage: "), getBatteryVoltage(), 3, F("V\n"));
     printi(F("Battery percentage: "), getBatteryPercentage(), 3, F("%\n"));
-    printi(F("Homing on start-up: "), enable_homing);
+    printi(F("Homing on start-up: "), enable_homing);    
+    printi(F("Angle between pictures: "), degrees_per_picture, 3, F("º\n"));
+    printi(F("Timelapse delay between pictures: "), delay_ms_between_pictures, F("ms\n"));   
     printi(F("Version: "));
     printi(F(VERSION_NUMBER));
     printi(F("\n"));
@@ -231,6 +272,9 @@ void debugReport(void){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 int setTargetPositions(float panDeg, float tiltDeg){//TODO: limits
+    if(enable_limits == 1 && !((panDeg >= limit_pan_min && panDeg <= limit_pan_max) && (tiltDeg >= limit_tilt_min && tiltDeg <= limit_tilt_max))){
+        return -1;
+    }
     target_position[0] = panDegreesToSteps(panDeg);
     target_position[1] = tiltDegreesToSteps(tiltDeg);
     multi_stepper.moveTo(target_position); 
@@ -238,11 +282,28 @@ int setTargetPositions(float panDeg, float tiltDeg){//TODO: limits
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+int setTargetPositionsSteps(long panSteps, long tiltSteps){//TODO: limits
+    target_position[0] = panSteps;
+    target_position[1] = tiltSteps;
+    multi_stepper.moveTo(target_position); 
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 bool findHome(void){
+    if(enable_limits == 1){
+        printi(F("Homing is not available when limits are enabled\n"));
+        return false;
+    }
     bool panHomeFlag = false;
     bool tiltHomeFlag = false;
     int panHomingDir = -1;
-    int tiltHomingDir = -1;   
+    int tiltHomingDir = -1; 
+    
+    setTargetPositions(0, 0);
+    stepper_pan.setCurrentPosition(0);//set step count to 0
+    stepper_tilt.setCurrentPosition(0);//set step count to 0
+
 
     while(digitalRead(PIN_PAN_HALL) == 0 || digitalRead(PIN_TILT_HALL) == 0){//If already on a Hall sensor move off
         target_position[0] = target_position[0] + panDegreesToSteps(!digitalRead(PIN_PAN_HALL));//increment by 1 degree
@@ -326,25 +387,25 @@ float getBatteryPercentage(void){ //TODO: Calibrate the values for your battery
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-//float panDegreesToSteps(float angularVelocity){
-//    return angularVelocity * pan_steps_per_degree;
-//}
-//
-///*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-//
-//float tiltDegreesToSteps(float angularVelocity){
-//    return angularVelocity * tilt_steps_per_degree;
-//}
-//
-///*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
 float panStepsToDegrees(long steps){
     return steps / pan_steps_per_degree;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+float panStepsToDegrees(float steps){
+    return steps / pan_steps_per_degree;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 float tiltStepsToDegrees(long steps){
+    return steps / tilt_steps_per_degree;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+float tiltStepsToDegrees(float steps){
     return steps / tilt_steps_per_degree;
 }
 
@@ -360,6 +421,9 @@ int addPosition(void){
         moves_array_elements++;//increment the index
         printi(F("Position added at index: "), current_moves_array_index);
         return 0;
+    }
+    else{
+        printi(F("Maximum number of position reached\n"));
     }
     return -1;
 }
@@ -402,6 +466,7 @@ void executeMoves(int repeat){
         for(int row = 0; row < moves_array_elements; row++){
             moveToIndex(row);
         }
+        ledBatteryLevel(getBatteryPercentage()); 
         if(getBatteryVoltage() < 9.5){//9.5V is used as the cut off to allow for inaccuracies and be on the safe side.
             delay(200);
             if(getBatteryVoltage() < 9.5){//Check voltage is still low and the first wasn't a miscellaneous reading
@@ -444,6 +509,36 @@ void addDelay(unsigned int ms){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+void scaleMovesArrayPanMaxSpeed(float newMax){
+    float currentMax = 0;
+    for(int row = 0; row < moves_array_elements; row++){ //Find the maximum pan speed
+        if(program_elements[row].panSpeed > currentMax){
+            currentMax = program_elements[row].panSpeed;
+        }  
+    }
+    float speedRatio = newMax / currentMax;
+    for(int row = 0; row < moves_array_elements; row++){ //Scale all the pan speeds      
+        program_elements[row].panSpeed = program_elements[row].panSpeed * speedRatio;
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void scaleMovesArrayTiltMaxSpeed(float newMax){
+    float currentMax = 0;
+    for(int row = 0; row < moves_array_elements; row++){ //Find the maximum pan speed
+        if(program_elements[row].tiltSpeed > currentMax){
+            currentMax = program_elements[row].tiltSpeed;
+        }  
+    }
+    float speedRatio = newMax / currentMax;
+    for(int row = 0; row < moves_array_elements; row++){ //Scale all the pan speeds      
+        program_elements[row].tiltSpeed = program_elements[row].tiltSpeed * speedRatio;
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 void invertPanDirection(bool invert){
     printi(F("Setting pan inversion to: "), invert);
     invert_pan = invert;
@@ -463,10 +558,10 @@ void invertTiltDirection(bool invert){
 void saveEEPROM(void){
     EEPROM.put(EEPROM_ADDRESS_ENABLE_HOMING, enable_homing);
     EEPROM.put(EEPROM_ADDRESS_MODE, step_mode);
-    EEPROM.put(EEPROM_ADDRESS_LIMIT_PAN_MIN, limit_pan_min);
-    EEPROM.put(EEPROM_ADDRESS_LIMIT_PAN_MAX, limit_pan_max);
-    EEPROM.put(EEPROM_ADDRESS_LIMIT_TILT_MIN, limit_tilt_min);
-    EEPROM.put(EEPROM_ADDRESS_LIMIT_TILT_MAX, limit_tilt_max);
+//    EEPROM.put(EEPROM_ADDRESS_LIMIT_PAN_MIN, limit_pan_min);
+//    EEPROM.put(EEPROM_ADDRESS_LIMIT_PAN_MAX, limit_pan_max);
+//    EEPROM.put(EEPROM_ADDRESS_LIMIT_TILT_MIN, limit_tilt_min);
+//    EEPROM.put(EEPROM_ADDRESS_LIMIT_TILT_MAX, limit_tilt_max);
     EEPROM.put(EEPROM_ADDRESS_PAN_MAX_SPEED, pan_max_speed);
     EEPROM.put(EEPROM_ADDRESS_TILT_MAX_SPEED, tilt_max_speed);
     EEPROM.put(EEPROM_ADDRESS_PAN_ACCELERATION, pan_acceleration);
@@ -474,7 +569,14 @@ void saveEEPROM(void){
     EEPROM.put(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
     EEPROM.put(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
     EEPROM.put(EEPROM_ADDRESS_INVERT_PAN, invert_pan);
-    EEPROM.put(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);
+    EEPROM.put(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);    
+    EEPROM.put(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
+    EEPROM.put(EEPROM_ADDRESS_TIMELAPSE_DELAY, delay_ms_between_pictures);
+    EEPROM.put(EEPROM_ADDRESS_ENABLE_LIMITS, enable_limits);
+    EEPROM.put(EEPROM_ADDRESS_PAN_MIN_LIMIT, limit_pan_min);
+    EEPROM.put(EEPROM_ADDRESS_PAN_MAX_LIMIT, limit_pan_max);
+    EEPROM.put(EEPROM_ADDRESS_TILT_MIN_LIMIT, limit_tilt_min);
+    EEPROM.put(EEPROM_ADDRESS_TILT_MAX_LIMIT, limit_tilt_max);    
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -491,14 +593,14 @@ void printEEPROM(void){
     else if(itemp == 1){
         printi(F("Step mode: Sixteenth step\n"));
     }
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MIN, ltemp);
-    printi(F("Pan min limit: "), ltemp);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MAX, ltemp);
-    printi(F("Pan max limit: "), ltemp);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MIN, ltemp);
-    printi(F("Tilt min limit: "), ltemp);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MAX, ltemp);
-    printi(F("Tilt max limit: "), ltemp);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MIN, ltemp);
+//    printi(F("Pan min limit: "), ltemp);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MAX, ltemp);
+//    printi(F("Pan max limit: "), ltemp);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MIN, ltemp);
+//    printi(F("Tilt min limit: "), ltemp);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MAX, ltemp);
+//    printi(F("Tilt max limit: "), ltemp);
     EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, ftemp);
     printi(F("Pan max speed: "), ftemp);
     EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, ftemp);
@@ -511,9 +613,22 @@ void printEEPROM(void){
     printi(F("Pan Hall offset: "), ftemp);
     EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, ftemp);
     printi(F("Tilt Hall offset: "), ftemp);
-    printi(F("Pan invert: "), (byte)EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
-    printi(F("Tilt invert: "), (byte)EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
-    printi(F("Homing on start-up: "), (byte)EEPROM.read(EEPROM_ADDRESS_ENABLE_HOMING));
+    EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, ftemp);
+    printi(F("Angle between pictures: "), ftemp, 3, F(" degrees\n"));
+    EEPROM.get(EEPROM_ADDRESS_TIMELAPSE_DELAY, ltemp);
+    printi(F("Timelapse delay between pictures: "), ltemp, F("ms\n"));   
+    printi(F("Pan invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
+    printi(F("Tilt invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
+    printi(F("Homing on start-up: "), EEPROM.read(EEPROM_ADDRESS_ENABLE_HOMING));
+    printi(F("Enable limits: "), EEPROM.read(EEPROM_ADDRESS_ENABLE_LIMITS));
+    EEPROM.get(EEPROM_ADDRESS_PAN_MIN_LIMIT, ftemp);
+    printi(F("Pan min limit: "), ftemp);   
+    EEPROM.get(EEPROM_ADDRESS_PAN_MAX_LIMIT, ftemp);
+    printi(F("Pan max limit: "), ftemp);
+    EEPROM.get(EEPROM_ADDRESS_TILT_MIN_LIMIT, ftemp);
+    printi(F("Tilt min limit: "), ftemp);
+    EEPROM.get(EEPROM_ADDRESS_TILT_MAX_LIMIT, ftemp); 
+    printi(F("Tilt max limit: "), ftemp);   
     printi(F("--------------------\n"));
 }
 
@@ -522,16 +637,23 @@ void printEEPROM(void){
 void setEEPROMVariables(void){
     printi(F("Setting values from EEPROM...\n"));
     EEPROM.get(EEPROM_ADDRESS_MODE, step_mode);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MIN, limit_pan_min);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MAX, limit_pan_max);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MIN, limit_tilt_min);
-    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MAX, limit_tilt_max);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MIN, limit_pan_min);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_PAN_MAX, limit_pan_max);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MIN, limit_tilt_min);
+//    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MAX, limit_tilt_max);
     EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, pan_max_speed);
     EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, tilt_max_speed);
     EEPROM.get(EEPROM_ADDRESS_PAN_ACCELERATION, pan_acceleration);
     EEPROM.get(EEPROM_ADDRESS_TILT_ACCELERATION, tilt_acceleration);
     EEPROM.get(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
     EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
+    EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
+    EEPROM.get(EEPROM_ADDRESS_TIMELAPSE_DELAY, delay_ms_between_pictures);
+    EEPROM.get(EEPROM_ADDRESS_ENABLE_LIMITS, enable_limits);
+    EEPROM.get(EEPROM_ADDRESS_PAN_MIN_LIMIT, limit_pan_min);
+    EEPROM.get(EEPROM_ADDRESS_PAN_MAX_LIMIT, limit_pan_max);
+    EEPROM.get(EEPROM_ADDRESS_TILT_MIN_LIMIT, limit_tilt_min);
+    EEPROM.get(EEPROM_ADDRESS_TILT_MAX_LIMIT, limit_tilt_max);   
     invert_pan = EEPROM.read(EEPROM_ADDRESS_INVERT_PAN);
     invert_tilt = EEPROM.read(EEPROM_ADDRESS_INVERT_TILT);
     enable_homing = EEPROM.read(EEPROM_ADDRESS_ENABLE_HOMING);
@@ -553,9 +675,89 @@ void toggleAutoHoming(void){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+void toggleEnableLimits(void){
+    if(enable_limits == 1){
+        enable_limits = 0;
+        printi(F("Limits disabled.\n"));
+    }
+    else{
+        enable_limits = 1;
+        printi(F("Limits enabled.\n"));
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void triggerCameraShutter(void){
+    digitalWrite(PIN_SHUTTER_TRIGGER, HIGH);
+    delay(SHUTTER_DELAY);
+    digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void ledBatteryLevel(float batteryPercentage){
+    byte hue = mapNumber(batteryPercentage, 0, 100, 0, 96);
+    LEDS.showColor(CHSV(hue , 255, 255));
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void timeLapseInterpolation(float panStartAngle, float tiltStartAngle, float panStopAngle, float tiltStopAngle, float degPerPic, unsigned long msDelay){
+    if(msDelay > SHUTTER_DELAY){
+        msDelay = msDelay - SHUTTER_DELAY;
+    }
+    float panAngle = panStopAngle - panStartAngle;
+    float tiltAngle = tiltStopAngle - tiltStartAngle;
+    float largestAngle = (abs(panAngle) > abs(tiltAngle)) ? panAngle : tiltAngle;
+    unsigned int numberOfIncrements = abs(largestAngle) / degPerPic;
+    if(numberOfIncrements == 0) return;
+    float panInc = panAngle / numberOfIncrements;
+    float tiltInc = tiltAngle / numberOfIncrements;
+    
+    for(int i = 0; i <= numberOfIncrements; i++){
+        setTargetPositions(panStartAngle + (panInc * i), tiltStartAngle + (tiltInc * i));
+        multi_stepper.runSpeedToPosition();//blocking move to the next position
+        delay(msDelay);
+        triggerCameraShutter();//capture the picture
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+void timeLapse(float degPerPic, unsigned long msDelay, int repeat){   
+    if(moves_array_elements < 2){ 
+        printi(F("Not enough elements recorded\n"));
+        return; //check there are posions to move to
+    }
+    for(int i = 0; i < repeat; i++){
+        //printi(F("Loop: "), repeat);
+        for(int index = 0; index < moves_array_elements - 1; index++){//check what hapens at last element (loop back)
+            //printi(F("Index: "), index);
+            timeLapseInterpolation(panStepsToDegrees(program_elements[index].panStepCount), tiltStepsToDegrees(program_elements[index].tiltStepCount), 
+            panStepsToDegrees(program_elements[index + 1].panStepCount), tiltStepsToDegrees(program_elements[index + 1].tiltStepCount), degPerPic, msDelay);
+        }
+    }
+}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+//float sliderStepsToMillimetres(long steps){
+//    return steps / SLIDER_MILLIMETRE_RATIO;
+//}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+//long sliderMilimeterToSteps(float mm){
+//    return mm * SLIDER_MILLIMETRE_RATIO;
+//}
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 void serialData(void){
     char instruction = Serial.read();
-    delay(2); //wait to make sure all data in the serial message has arived 
+    delay(2); //wait to make sure all data in the serial message has arived
+    ledBatteryLevel(getBatteryPercentage()); 
     memset(&stringText[0], 0, sizeof(stringText)); //clear the array
     while(Serial.available()){//set elemetns of stringText to the serial values sent
         char digit = Serial.read(); //read in a char
@@ -564,8 +766,60 @@ void serialData(void){
     serialFlush();//Clear any excess data in the serial buffer
     int serialCommandValueInt = atoi(stringText); //converts stringText to an int
     float serialCommandValueFloat = atof(stringText); //converts stringText to a float
-    //if(command == 'G' && stringText[0] == 0) return;//For the bluetooth issue of it sending data when it connects...
+    if(instruction == 'G' && stringText[0] == 0) return;//For the bluetooth issue of it sending data when it connects...
     switch(instruction){
+        case INSTRUCTION_DELAY_BETWEEN_PICTURES:{
+            delay_ms_between_pictures = serialCommandValueFloat;
+            printi(F("Delay between pictures: "), delay_ms_between_pictures, F("ms\n"));
+        }
+        break;
+        case INSTRUCTION_ANGLE_BETWEEN_PICTURES:{
+            degrees_per_picture = serialCommandValueFloat;
+            printi(F("Degrees per picture: "), degrees_per_picture, 3, F("º\n"));
+        }
+        break;     
+        case INSTRUCTION_ENABLE_LIMITS:{
+            toggleEnableLimits();
+        }
+        break;
+        case INSTRUCTION_PAN_MIN_LIMIT:{
+            limit_pan_min = serialCommandValueFloat;
+            printi(F("Pan min limit set to: "), limit_pan_min, 3, F("º\n"));
+        }
+        break;
+        case INSTRUCTION_PAN_MAX_LIMIT:{
+            limit_pan_max = serialCommandValueFloat;
+            printi(F("Pan max limit set to: "), limit_pan_max, 3, F("º\n"));
+        }
+        break;
+        case INSTRUCTION_TILT_MIN_LIMIT:{
+            limit_tilt_min = serialCommandValueFloat;
+            printi(F("Tilt min limit set to: "), limit_tilt_min, 3, F("º\n"));
+        }
+        break;
+        case INSTRUCTION_TILT_MAX_LIMIT:{
+            limit_tilt_max = serialCommandValueFloat;
+            printi(F("Tilt max limit set to: "), limit_tilt_max, 3, F("º\n"));
+        }
+        break;
+        case INSTRUCTION_TIMELAPSE:{
+            printi(F("Starting timelapse...\n"));
+            timeLapse(degrees_per_picture, delay_ms_between_pictures, 1);
+            printi(F("Timelapse finished\n"));
+        }
+        break;
+        case INSTRUCTION_SCALE_PAN_SPEED:{
+            scaleMovesArrayPanMaxSpeed(panDegreesToSteps(serialCommandValueFloat));
+        }
+        break;
+        case INSTRUCTION_SCALE_TILT_SPEED:{
+            scaleMovesArrayTiltMaxSpeed(tiltDegreesToSteps(serialCommandValueFloat));
+        }
+        break;
+        case INSTRUCTION_TRIGGER_SHUTTER:{
+            triggerCameraShutter();
+        }
+        break;
         case INSTRUCTION_AUTO_HOME:{
             printi(F("Beginning homing...\n"));
             if(findHome()){
@@ -651,10 +905,6 @@ void serialData(void){
             stepper_tilt.runSpeed();
         }
         break;
-        case INSTRUCTION_STATUS:{
-            statusReport();
-        }
-        break;
         case INSTRUCTION_DEBUG_STATUS:{
             debugReport();
         }
@@ -677,12 +927,6 @@ void serialData(void){
             tiltJogDegrees(serialCommandValueFloat);
         }
         break; 
-//        case INSTRUCTION_HOME:{
-//            target_position[0] = 0;
-//            target_position[1] = 0;
-//            multi_stepper.moveTo(target_position); //Sets new target positions
-//        }
-//        break; 
         case INSTRUCTION_SET_HOME:{
             stepper_pan.setCurrentPosition(0);
             stepper_tilt.setCurrentPosition(0);
@@ -706,13 +950,13 @@ void serialData(void){
         break; 
         case INSTRUCTION_SET_PAN_SPEED:{
             printi("Setting maximum pan speed to ", serialCommandValueFloat, 1, " steps/s.\n");
-            pan_max_speed = serialCommandValueFloat;
+            pan_max_speed = panDegreesToSteps(serialCommandValueFloat);
             stepper_pan.setMaxSpeed(pan_max_speed);
         }
         break; 
         case INSTRUCTION_SET_TILT_SPEED:{
             printi("Setting maximum tilt speed to ", serialCommandValueFloat, 1, " steps/s.\n");
-            tilt_max_speed = serialCommandValueFloat;
+            tilt_max_speed = tiltDegreesToSteps(serialCommandValueFloat);
             stepper_tilt.setMaxSpeed(tilt_max_speed);
         }
         break;

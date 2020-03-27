@@ -17,14 +17,23 @@
  * 
  * Code written by isaac879
  * 
- * Last modified: 23/03/2020
+ * Last modified: 27/03/2020
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //TODOs:
-//software limits
+//program array in deg
 //point to point in x time
-//status reports
 //report commands
+//slider stuff
+    //steps per mm
+    //move x mm
+    //limits
+    //all array operations
+    //all printi
+    //all eeprom
+
+//Make an AT+ command set
+//Rename arrays stuff to Keyframes
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
