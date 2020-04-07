@@ -17,21 +17,18 @@
  * 
  * Code written by isaac879
  * 
- * Last modified: 27/03/2020
+ * Last modified: 07/04/2020
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //TODOs:
 //program array in deg
 //point to point in x time
 //report commands
-//slider stuff
-    //steps per mm
-    //move x mm
-    //limits
-    //all array operations
-    //all printi
-    //all eeprom
+//slider in panorama lapse
 
+//function to keep focus on a point
+//can probably remove most acelleration stuff
+//Change step counts for other step modes
 //Make an AT+ command set
 //Rename arrays stuff to Keyframes
 
