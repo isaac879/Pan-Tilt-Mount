@@ -21,16 +21,17 @@
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //TODOs:
+//change defines for pins to match pcb design
+//Change step counts for other step modes
+//function to keep focus on a point
+
+
+//can probably remove most acelleration stuff
 //program array in deg
 //point to point in x time
-//report commands
-//slider in panorama lapse
-
-//function to keep focus on a point
-//can probably remove most acelleration stuff
-//Change step counts for other step modes
 //Make an AT+ command set
-//Rename arrays stuff to Keyframes
+//report commands
+//Rename arrays to Keyframes
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

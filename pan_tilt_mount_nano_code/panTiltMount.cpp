@@ -68,7 +68,7 @@ void initPanTilt(void){
     digitalWrite(PIN_SHUTTER_TRIGGER, LOW);
     FastLED.addLeds<LED_TYPE, PIN_LED_DATA, COLOR_ORDER>(leds, NUM_LEDS);
     FastLED.setBrightness(BRIGHTNESS);
-    LEDS.showColor(CHSV(160 , 255, 255)); //Set led to blue
+    LEDS.showColor(CHSV(160, 255, 255)); //Set led to blue
     setEEPROMVariables();
     stepper_pan.setMinPulseWidth(20);
     stepper_tilt.setMinPulseWidth(20);
@@ -148,11 +148,11 @@ void serialFlush(void){
 void enableSteppers(bool state){
     if(state == true){
         digitalWrite(PIN_ENABLE, LOW); //Enable the stepper drivers
-        printi(F("Stepper motors enabled.\n"));
+        printi(F("Motors enabled.\n"));
     }
     else{
         digitalWrite(PIN_ENABLE, HIGH); //Disabe the stepper drivers
-        printi(F("Stepper motors disabled.\n"));
+        printi(F("Motors disabled.\n"));
     }
     enable_state = state;
 }
@@ -239,7 +239,7 @@ void sliderMoveTo(float mm){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void printProgramElements(void){
-    printi(F("-----Program Elements-----\n"));
+    printi(F("---Program Elements---\n"));
     for(int row = 0; row < moves_array_elements; row++){
         printi(F(""), row, F("\t|"));
         printi(F(" Pan: "), panStepsToDegrees(program_elements[row].panStepCount), 3, F("º\t"));
@@ -256,61 +256,61 @@ void printProgramElements(void){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void debugReport(void){
-    printi(F("----------Debug Report----------\n"));
-    printi(F("Stepper enable state: "), enable_state);
-    printi(F("Step Mode: "), step_mode);
+    printi(F("---Debug Report---\n"));
+    printi(F("Motor enable state: "), enable_state);
+//    printi(F("Step Mode: "), step_mode);
 //    printi(F("Pan Hall sensor state: "), digitalRead(PIN_PAN_HALL));
 //    printi(F("Tilt Hall sensor state: "), digitalRead(PIN_TILT_HALL));
 //    printi(F("Pan step count: "), stepper_pan.currentPosition());
 //    printi("Tilt step count: ", stepper_tilt.currentPosition());
-    printi("Slider step count: ", stepper_slider.currentPosition());
+//    printi("Slider step count: ", stepper_slider.currentPosition());
     printi(F("Pan angle: "), panStepsToDegrees(stepper_pan.currentPosition()), 3, F("º\n"));
     printi(F("Tilt angle: "), tiltStepsToDegrees(stepper_tilt.currentPosition()), 3, F("º\n")); 
     printi(F("Slider position: "), sliderStepsToMillimetres(stepper_slider.currentPosition()), 3, F("mm\n")); 
 //    printi(F("Pan steps per º: "), pan_steps_per_degree);
 //    printi(F("Tilt steps per º: "), tilt_steps_per_degree);
-    printi(F("Slider steps per mm: "), slider_steps_per_millimetre);
+//    printi(F("Slider steps per mm: "), slider_steps_per_millimetre);
 //    printi(F("Pan current steps/s: "), stepper_pan.speed());
 //    printi(F("Tilt current steps/s: "), stepper_tilt.speed());
-    printi(F("Slider current steps/s: "), stepper_slider.speed());
-    printi(F("Pan current º/s: "), panStepsToDegrees(stepper_pan.speed()));
-    printi(F("Tilt current º/s: "), tiltStepsToDegrees(stepper_tilt.speed()));
-    printi(F("Slider current mm/s: "), sliderStepsToMillimetres(stepper_slider.speed()));  
+//    printi(F("Slider current steps/s: "), stepper_slider.speed());
+//    printi(F("Pan current º/s: "), panStepsToDegrees(stepper_pan.speed()));
+//    printi(F("Tilt current º/s: "), tiltStepsToDegrees(stepper_tilt.speed()));
+//    printi(F("Slider current mm/s: "), sliderStepsToMillimetres(stepper_slider.speed()));  
 //    printi(F("Pan maximum steps/s: "), stepper_pan.maxSpeed());
 //    printi(F("Tilt maximum steps/s: "), stepper_tilt.maxSpeed());
-    printi(F("Slider maximum steps/s: "), stepper_slider.maxSpeed());
-    printi(F("Pan maximum º/s: "), panStepsToDegrees(stepper_pan.maxSpeed()));
-    printi(F("Tilt maximum º/s: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()));
-    printi(F("Slider maximum mm/s: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()));    
+//    printi(F("Slider maximum steps/s: "), stepper_slider.maxSpeed());
+    printi(F("Pan max speed: "), panStepsToDegrees(stepper_pan.maxSpeed()), 3, F("º/s\n"));
+    printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
+    printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));    
 //    printi(F("Pan acceleration steps/s/s: "), pan_acceleration);
 //    printi(F("Tilt acceleration steps/s/s: "), tilt_acceleration);
-    printi(F("Slider acceleration steps/s/s: "), slider_acceleration);   
+//    printi(F("Slider acceleration steps/s/s: "), slider_acceleration);   
 //    printi(F("Pan acceleration º/s/s: "), panStepsToDegrees(pan_acceleration));
 //    printi(F("Tilt acceleration º/s/s: "), tiltStepsToDegrees(tilt_acceleration));
-    printi(F("Slider acceleration mm/s/s: "), sliderStepsToMillimetres(slider_acceleration));    
-    printi(F("Pan min limit: "), limit_pan_min, 3, F("º\n"));
-    printi(F("Pan max limit: "), limit_pan_max, 3, F("º\n"));    
-    printi(F("Tilt min limit: "), limit_tilt_min, 3, F("º\n"));
-    printi(F("Tilt max limit: "), limit_tilt_max, 3, F("º\n"));
-    printi(F("Slider min limit: "), limit_slider_min, 3, F("mm\n"));
-    printi(F("Slider max limit: "), limit_slider_max, 3, F("mm\n"));
-    printi(F("Enable limits: "), enable_limits);    
-    printi(F("Pan invert direction: "), invert_pan);
-    printi(F("Tilt invert direction: "), invert_tilt);
-    printi(F("Slider invert direction: "), invert_slider);
-    printi(F("Pan Hall offset: "), hall_pan_offset_degrees, 3, F("º\n"));
-    printi(F("Tilt Hall offset: "), hall_tilt_offset_degrees, 3, F("º\n"));  
+//    printi(F("Slider acceleration mm/s/s: "), sliderStepsToMillimetres(slider_acceleration));    
+//    printi(F("Pan min limit: "), limit_pan_min, 3, F("º\n"));
+//    printi(F("Pan max limit: "), limit_pan_max, 3, F("º\n"));    
+//    printi(F("Tilt min limit: "), limit_tilt_min, 3, F("º\n"));
+//    printi(F("Tilt max limit: "), limit_tilt_max, 3, F("º\n"));
+//    printi(F("Slider min limit: "), limit_slider_min, 3, F("mm\n"));
+//    printi(F("Slider max limit: "), limit_slider_max, 3, F("mm\n"));
+//    printi(F("Enable limits: "), enable_limits);    
+//    printi(F("Pan invert direction: "), invert_pan);
+//    printi(F("Tilt invert direction: "), invert_tilt);
+//    printi(F("Slider invert direction: "), invert_slider);
+//    printi(F("Pan Hall offset: "), hall_pan_offset_degrees, 3, F("º\n"));
+//    printi(F("Tilt Hall offset: "), hall_tilt_offset_degrees, 3, F("º\n"));  
     printi(F("Battery voltage: "), getBatteryVoltage(), 3, F("V\n"));
     printi(F("Battery percentage: "), getBatteryPercentage(), 3, F("%\n"));
     printi(F("Homing on start-up: "), enable_homing);    
     printi(F("Angle between pictures: "), degrees_per_picture, 3, F("º\n"));
-    printi(F("Timelapse delay between pictures: "), delay_ms_between_pictures, F("ms\n"));   
+    printi(F("Panoramiclapse delay between pictures: "), delay_ms_between_pictures, F("ms\n"));   
     printi(F("Version: "));
     printi(F(VERSION_NUMBER));
     printi(F("\n"));
     printEEPROM();
     printProgramElements();
-    printi(F("------------------------------\n"));
+    printi(F("-----------\n"));
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -349,7 +349,7 @@ int setTargetPositions(float panDeg, float tiltDeg, float sliderMillimetre){
 
 bool findHome(void){
     if(enable_limits == 1){
-        printi(F("Homing is not available when limits are enabled\n"));
+        printi(F("Homing not available with limits enabled\n"));
         return false;
     }
     bool panHomeFlag = false;
@@ -562,7 +562,7 @@ void editMovesArrayIndex(void){
     program_elements[current_moves_array_index].tiltSpeed = stepper_tilt.maxSpeed();
     program_elements[current_moves_array_index].sliderSpeed = stepper_slider.maxSpeed();
     
-    printi(F("Position edited at index: "), current_moves_array_index);
+    printi(F("Edited at index: "), current_moves_array_index);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -621,7 +621,7 @@ void scaleMovesArraySliderMaxSpeed(float newMax){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void invertPanDirection(bool invert){
-    printi(F("Setting pan inversion to: "), invert);
+    printi(F("Pan inversion set to: "), invert);
     invert_pan = invert;
     stepper_pan.setPinsInverted(invert, false, false);
 }
@@ -629,7 +629,7 @@ void invertPanDirection(bool invert){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void invertTiltDirection(bool invert){
-    printi(F("Setting tilt inversion to: "), invert);
+    printi(F("Tilt inversion set to: "), invert);
     invert_tilt = invert;
     stepper_tilt.setPinsInverted(invert, false, false);
 }
@@ -637,7 +637,7 @@ void invertTiltDirection(bool invert){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void invertSliderDirection(bool invert){
-    printi(F("Setting slider inversion to: "), invert);
+    printi(F("Slider inversion set to: "), invert);
     invert_slider = invert;
     stepper_slider.setPinsInverted(invert, false, false);
 }
@@ -663,7 +663,7 @@ void saveEEPROM(void){
     EEPROM.put(EEPROM_ADDRESS_INVERT_TILT, invert_tilt);    
     EEPROM.put(EEPROM_ADDRESS_INVERT_SLIDER, invert_slider);      
     EEPROM.put(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-    EEPROM.put(EEPROM_ADDRESS_TIMELAPSE_DELAY, delay_ms_between_pictures);
+    EEPROM.put(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
     EEPROM.put(EEPROM_ADDRESS_ENABLE_LIMITS, enable_limits);
     EEPROM.put(EEPROM_ADDRESS_PAN_MIN_LIMIT, limit_pan_min);
     EEPROM.put(EEPROM_ADDRESS_PAN_MAX_LIMIT, limit_pan_max);
@@ -679,7 +679,7 @@ void printEEPROM(void){
     int itemp;
     float ftemp;
     long ltemp;
-    printi(F("-----Saved Values-----\n"));
+    printi(F("---Saved Values---\n"));
     EEPROM.get(EEPROM_ADDRESS_MODE, itemp);
     if(itemp == 0){
         printi(F("Step mode: Full step\n"));
@@ -696,24 +696,24 @@ void printEEPROM(void){
 //    EEPROM.get(EEPROM_ADDRESS_LIMIT_TILT_MAX, ltemp);
 //    printi(F("Tilt max limit: "), ltemp);
     EEPROM.get(EEPROM_ADDRESS_PAN_MAX_SPEED, ftemp);
-    printi(F("Pan max speed: "), ftemp);
+    printi(F("Pan max speed: "), panStepsToDegrees(ftemp), 3, F("º/s\n"));
     EEPROM.get(EEPROM_ADDRESS_TILT_MAX_SPEED, ftemp);
-    printi(F("Tilt max speed: "), ftemp);
+    printi(F("Tilt max speed: "), tiltStepsToDegrees(ftemp), 3, F("º/s\n"));
     EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_SPEED, ftemp);
-    printi(F("Slider max speed: "), ftemp);
+    printi(F("Slider max speed: "), sliderStepsToMillimetres(ftemp), 3, F("mm/s\n"));
 //    EEPROM.get(EEPROM_ADDRESS_PAN_ACCELERATION, ftemp);
 //    printi(F("Pan max acceleration: "), ftemp);
 //    EEPROM.get(EEPROM_ADDRESS_TILT_ACCELERATION, ftemp);
 //    printi(F("Tilt max acceleration: "), ftemp);
-    EEPROM.get(EEPROM_ADDRESS_SLIDER_ACCELERATION, ftemp);
-    printi(F("Slider max acceleration: "), ftemp); 
+//    EEPROM.get(EEPROM_ADDRESS_SLIDER_ACCELERATION, ftemp);
+//    printi(F("Slider max acceleration: "), ftemp); 
     EEPROM.get(EEPROM_ADDRESS_HALL_PAN_OFFSET, ftemp);
-    printi(F("Pan Hall offset: "), ftemp);
+    printi(F("Pan Hall offset: "), ftemp, 3, F("º\n"));
     EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, ftemp);
-    printi(F("Tilt Hall offset: "), ftemp);
+    printi(F("Tilt Hall offset: "), ftemp, 3, F("º\n"));
     EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, ftemp);
-    printi(F("Angle between pictures: "), ftemp, 3, F(" degrees\n"));
-    EEPROM.get(EEPROM_ADDRESS_TIMELAPSE_DELAY, ltemp);
+    printi(F("Angle between pictures: "), ftemp, 3, F(" º\n"));
+    EEPROM.get(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, ltemp);
     printi(F("Delay between pictures: "), ltemp, F("ms\n"));   
     printi(F("Pan invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_PAN));
     printi(F("Tilt invert: "), EEPROM.read(EEPROM_ADDRESS_INVERT_TILT));
@@ -721,18 +721,18 @@ void printEEPROM(void){
     printi(F("Homing on start-up: "), EEPROM.read(EEPROM_ADDRESS_ENABLE_HOMING));
     printi(F("Enable limits: "), EEPROM.read(EEPROM_ADDRESS_ENABLE_LIMITS));
     EEPROM.get(EEPROM_ADDRESS_PAN_MIN_LIMIT, ftemp);
-    printi(F("Pan min limit: "), ftemp);   
+    printi(F("Pan min limit: "), ftemp, 3, F("º\n"));   
     EEPROM.get(EEPROM_ADDRESS_PAN_MAX_LIMIT, ftemp);
-    printi(F("Pan max limit: "), ftemp);
+    printi(F("Pan max limit: "), ftemp, 3, F("º\n"));
     EEPROM.get(EEPROM_ADDRESS_TILT_MIN_LIMIT, ftemp);
-    printi(F("Tilt min limit: "), ftemp);
+    printi(F("Tilt min limit: "), ftemp, 3, F("º\n"));
     EEPROM.get(EEPROM_ADDRESS_TILT_MAX_LIMIT, ftemp); 
-    printi(F("Tilt max limit: "), ftemp); 
+    printi(F("Tilt max limit: "), ftemp, 3, F("º\n")); 
     EEPROM.get(EEPROM_ADDRESS_SLIDER_MIN_LIMIT, ftemp);
-    printi(F("Slider min limit: "), ftemp);
+    printi(F("Slider min limit: "), ftemp, 3, F("mm\n"));
     EEPROM.get(EEPROM_ADDRESS_SLIDER_MAX_LIMIT, ftemp); 
-    printi(F("Slider max limit: "), ftemp);  
-    printi(F("--------------------\n"));
+    printi(F("Slider max limit: "), ftemp, 3, F("mm\n"));  
+    printi(F("\n"));
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -753,7 +753,7 @@ void setEEPROMVariables(void){
     EEPROM.get(EEPROM_ADDRESS_HALL_PAN_OFFSET, hall_pan_offset_degrees);
     EEPROM.get(EEPROM_ADDRESS_HALL_TILT_OFFSET, hall_tilt_offset_degrees);
     EEPROM.get(EEPROM_ADDRESS_DEGREES_PER_PICTURE, degrees_per_picture);
-    EEPROM.get(EEPROM_ADDRESS_TIMELAPSE_DELAY, delay_ms_between_pictures);
+    EEPROM.get(EEPROM_ADDRESS_PANORAMICLAPSE_DELAY, delay_ms_between_pictures);
     EEPROM.get(EEPROM_ADDRESS_ENABLE_LIMITS, enable_limits);
     EEPROM.get(EEPROM_ADDRESS_PAN_MIN_LIMIT, limit_pan_min);
     EEPROM.get(EEPROM_ADDRESS_PAN_MAX_LIMIT, limit_pan_max);
@@ -811,21 +811,23 @@ void ledBatteryLevel(float batteryPercentage){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void timeLapseInterpolation(float panStartAngle, float tiltStartAngle, float panStopAngle, float tiltStopAngle, float degPerPic, unsigned long msDelay){
+void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, float sliderStartPos, float panStopAngle, float tiltStopAngle, float sliderStopPos, float degPerPic, unsigned long msDelay){
     if(degPerPic == 0) return;
     if(msDelay > SHUTTER_DELAY){
         msDelay = msDelay - SHUTTER_DELAY;
     }
     float panAngle = panStopAngle - panStartAngle;
     float tiltAngle = tiltStopAngle - tiltStartAngle;
+    float sliderDistance = sliderStopPos - sliderStartPos;
     float largestAngle = (abs(panAngle) > abs(tiltAngle)) ? panAngle : tiltAngle;
     unsigned int numberOfIncrements = abs(largestAngle) / degPerPic;
     if(numberOfIncrements == 0) return;
     float panInc = panAngle / numberOfIncrements;
     float tiltInc = tiltAngle / numberOfIncrements;
+    float sliderInc = sliderDistance / numberOfIncrements;
     
     for(int i = 0; i <= numberOfIncrements; i++){
-        setTargetPositions(panStartAngle + (panInc * i), tiltStartAngle + (tiltInc * i));
+        setTargetPositions(panStartAngle + (panInc * i), tiltStartAngle + (tiltInc * i), sliderStartPos + (sliderInc * i));
         multi_stepper.runSpeedToPosition();//blocking move to the next position
         delay(msDelay);
         LEDS.showColor(CHSV(160 , 255, 255)); //blue
@@ -836,26 +838,43 @@ void timeLapseInterpolation(float panStartAngle, float tiltStartAngle, float pan
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void timeLapse(float degPerPic, unsigned long msDelay, int repeat){   
+void panoramiclapse(float degPerPic, unsigned long msDelay, int repeat){   
     if(moves_array_elements < 2){ 
-        printi(F("Not enough elements recorded\n"));
+        printi(F("Not enough positions recorded\n"));
         return; //check there are posions to move to
     }
     for(int i = 0; i < repeat; i++){
-        for(int index = 0; index < moves_array_elements - 1; index++){//check what happens at last element (loop back)
-            timeLapseInterpolation(panStepsToDegrees(program_elements[index].panStepCount), tiltStepsToDegrees(program_elements[index].tiltStepCount), 
-            panStepsToDegrees(program_elements[index + 1].panStepCount), tiltStepsToDegrees(program_elements[index + 1].tiltStepCount), degPerPic, msDelay);
+        for(int index = 0; index < moves_array_elements - 1; index++){
+            panoramiclapseInterpolation(panStepsToDegrees(program_elements[index].panStepCount), tiltStepsToDegrees(program_elements[index].tiltStepCount), sliderStepsToMillimetres(program_elements[index].sliderStepCount),
+            panStepsToDegrees(program_elements[index + 1].panStepCount), tiltStepsToDegrees(program_elements[index + 1].tiltStepCount), sliderStepsToMillimetres(program_elements[index + 1].sliderStepCount), degPerPic, msDelay);
         }
     }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void staticTimeLapse(unsigned int numberOfPictures, unsigned long msDelay){
+void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
     if(msDelay > SHUTTER_DELAY){
         msDelay = msDelay - SHUTTER_DELAY;
     }
-    for(int i = 0; i < numberOfPictures; i++){
+   
+    float panAngle = 0;
+    float tiltAngle = 0;
+    float sliderTravel = 0;
+    
+    if(moves_array_elements >= 2){ 
+        panAngle = panStepsToDegrees(program_elements[1].panStepCount) - panStepsToDegrees(program_elements[0].panStepCount);
+        tiltAngle = tiltStepsToDegrees(program_elements[1].tiltStepCount) - tiltStepsToDegrees(program_elements[0].tiltStepCount);
+        sliderTravel = sliderStepsToMillimetres(program_elements[1].sliderStepCount) - sliderStepsToMillimetres(program_elements[0].sliderStepCount);
+    }
+    
+    float sliderInc = sliderTravel / numberOfPictures;
+    float panInc = panAngle / numberOfPictures;
+    float tiltInc = tiltAngle / numberOfPictures;
+    
+    for(int i = 0; i <= numberOfPictures; i++){
+        setTargetPositions(panStepsToDegrees(stepper_pan.currentPosition()) + (panInc * i), tiltStepsToDegrees(stepper_tilt.currentPosition()) + (tiltInc * i), sliderStepsToMillimetres(stepper_slider.currentPosition()) + (sliderInc * i));
+        multi_stepper.runSpeedToPosition();//blocking move to the next position
         delay(msDelay);
         LEDS.showColor(CHSV(160 , 255, 255)); //blue
         triggerCameraShutter();//capture the picture
@@ -928,16 +947,16 @@ void serialData(void){
             printi(F("Tilt max limit set to: "), limit_tilt_max, 3, F("º\n"));
         }
         break;
-        case INSTRUCTION_TIMELAPSE:{
+        case INSTRUCTION_PANORAMICLAPSE:{
             printi(F("Starting panorama.\n"));
-            timeLapse(degrees_per_picture, delay_ms_between_pictures, 1);
+            panoramiclapse(degrees_per_picture, delay_ms_between_pictures, 1);
             printi(F("Finished\n"));
         }
         break;
-        case INSTRUCTION_STATIC_TIMELAPSE:{
-            printi(F("Starting timelapse with:\n"), serialCommandValueInt, F(" pics\n"));
+        case INSTRUCTION_TIMELAPSE:{
+            printi(F("Starting timelapse with "), serialCommandValueInt, F(" pics\n"));
             printi(F(""), delay_ms_between_pictures, F("ms between pics\n"));
-            timeLapse(serialCommandValueInt, delay_ms_between_pictures, 1);
+            timelapse(serialCommandValueInt, delay_ms_between_pictures);
             printi(F("Finished\n"));
         }
         break;
@@ -991,9 +1010,9 @@ void serialData(void){
         }
         break;
         case INSTRUCTION_SAVE_TO_EEPROM:{
-            printi(F("Saving values to EEPROM.\n"));
+            printi(F("Saving values to EEPROM...\n"));
             saveEEPROM();
-            printi(F("Current valuses saved.\n"));
+//            printi(F("Saved.\n"));
         }
         break;
         case INSTRUCTION_ADD_POSITION:{

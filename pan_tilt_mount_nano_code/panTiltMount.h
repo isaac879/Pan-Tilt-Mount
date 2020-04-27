@@ -5,6 +5,23 @@
 
 #define BAUD_RATE 57600
 
+//#define PIN_LED_DATA A0
+//#define PIN_SHUTTER_TRIGGER A1
+//#define PIN_PAN_HALL A3
+//#define PIN_TILT_HALL A4
+//#define PIN_INPUT_VOLTAGE A5
+//#define PIN_ENABLE 12
+//#define PIN_MS1 11
+//#define PIN_MS2 10
+//#define PIN_MS3 9
+//#define PIN_STEP_SLIDER 8
+//#define PIN_DIRECTION_SLIDER 7
+//#define PIN_STEP_TILT 6
+//#define PIN_DIRECTION_TILT 5
+//#define PIN_STEP_PAN 4
+//#define PIN_DIRECTION_PAN 3
+//#define PIN_LASER 2
+
 #define PIN_LED_DATA 2
 #define PIN_SHUTTER_TRIGGER 4
 #define PIN_DIRECTION_PAN 5
@@ -68,7 +85,7 @@
 #define INSTRUCTION_SCALE_TILT_SPEED 'N'
 #define INSTRUCTION_SAVE_TO_EEPROM 'U'
 //#define INSTRUCTION_SET_LED_HUE 'b'
-#define INSTRUCTION_TIMELAPSE 'L'
+#define INSTRUCTION_PANORAMICLAPSE 'L'
 #define INSTRUCTION_ENABLE_LIMITS 'y'
 #define INSTRUCTION_PAN_MIN_LIMIT 'f'
 #define INSTRUCTION_PAN_MAX_LIMIT 'F'
@@ -78,7 +95,7 @@
 #define INSTRUCTION_SLIDER_MAX_LIMIT 'Z'
 #define INSTRUCTION_ANGLE_BETWEEN_PICTURES 'b'
 #define INSTRUCTION_DELAY_BETWEEN_PICTURES 'B'
-#define INSTRUCTION_STATIC_TIMELAPSE 'l'
+#define INSTRUCTION_TIMELAPSE 'l'
 #define INSTRUCTION_SLIDER_MILLIMETRES 'x'
 #define INSTRUCTION_INVERT_SLIDER 'j'
 #define INSTRUCTION_SET_SLIDER_SPEED 'X'
@@ -98,7 +115,7 @@
 #define EEPROM_ADDRESS_INVERT_TILT 42
 #define EEPROM_ADDRESS_MODE 43
 #define EEPROM_ADDRESS_DEGREES_PER_PICTURE 45
-#define EEPROM_ADDRESS_TIMELAPSE_DELAY 49
+#define EEPROM_ADDRESS_PANORAMICLAPSE_DELAY 49
 #define EEPROM_ADDRESS_ENABLE_LIMITS 53
 #define EEPROM_ADDRESS_PAN_MIN_LIMIT 54
 #define EEPROM_ADDRESS_PAN_MAX_LIMIT 58
@@ -115,7 +132,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "2.0.1"
+#define VERSION_NUMBER "2.1.1"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -175,15 +192,15 @@ void scaleMovesArrayPanMaxSpeed(float newMax);
 void scaleMovesArrayTiltMaxSpeed(float newMax);
 void ledBatteryLevel(float batteryPercentage);
 //int setTargetPositionsSteps(long panSteps, long tiltSteps);
-void timeLapseInterpolation(float, float, float, float, float, unsigned long);
-void timeLapse(float, unsigned long, int);
+void panoramiclapseInterpolation(float, float, float, float, float, float, float, unsigned long);
+void panoramiclapse(float, unsigned long, int);
 void toggleEnableLimits(void);
 float sliderMillimetresToSteps(float);
 float sliderStepsToMillimetres(long);
 void sliderMoveTo(float);
 void scaleMovesArraySliderMaxSpeed(float);
 void invertSliderDirection(bool);
-void staticTimeLapse(unsigned int, unsigned long);
+void timelapse(unsigned int, unsigned long);
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
