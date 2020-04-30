@@ -50,6 +50,7 @@
 
 #define SHUTTER_DELAY 200
 
+#define INSTRUCTION_BYTES_PAN_SPEED 1
 #define INSTRUCTION_STEP_MODE 'm'
 #define INSTRUCTION_PAN_STEPS 'P'
 #define INSTRUCTION_TILT_STEPS 'T'
@@ -132,7 +133,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "2.1.1"
+#define VERSION_NUMBER "2.2.1"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

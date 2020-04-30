@@ -886,6 +886,21 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
 
 void serialData(void){
     char instruction = Serial.read();
+    if(instruction == INSTRUCTION_BYTES_PAN_SPEED){
+        int count = 0;
+        while(Serial.available() < 2){//Wait for six bytes to be available. Breaks after ~200ms if bytes are not received.
+                delayMicroseconds(200); 
+                count++;
+                if(count > 1000){
+                    serialFlush();//Clear the serial buffer
+                    break;   
+                }
+            }
+            int panStepSpeed = (Serial.read() << 8) + Serial.read(); 
+            stepper_pan.setSpeed(panStepSpeed);
+            stepper_pan.runSpeed();
+    }
+    
     delay(2); //wait to make sure all data in the serial message has arived
     ledBatteryLevel(getBatteryPercentage()); 
     memset(&stringText[0], 0, sizeof(stringText)); //clear the array
