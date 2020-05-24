@@ -10,8 +10,8 @@ There are Hall effect sensors embedded in the pan and tilt axis to allow the ste
 
 Communicating with the Arduino is simply over a serial connection provided by the USB or JDY-31 serial pass-through Bluetooth module.
 
+The project video/demo: https://youtu.be/uJO7mv4-0PY
+
 Some picture, videos and development updates are available here: https://www.instagram.com/p/B-KXCTlj_CY/
 
 The CAD STL files are available here: https://www.thingiverse.com/thing:4316563
-
-The project video/demo will be on my YouTube channel soon: https://www.youtube.com/c/isaac879
