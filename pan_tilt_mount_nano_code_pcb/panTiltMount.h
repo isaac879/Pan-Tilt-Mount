@@ -20,7 +20,7 @@
 #define PIN_DIRECTION_TILT 5
 #define PIN_STEP_PAN 4
 #define PIN_DIRECTION_PAN 3
-#define PIN_LASER 2
+#define PIN_SLIDER_HALL 2
 
 #define FULL_STEP 1
 #define HALF_STEP 2
@@ -32,21 +32,19 @@
 #define TILT_GEAR_RATIO 3.047619047619047619047619047619 //64/21 teeth
 
 #define MAX_STRING_LENGTH 10
-#define ARRAY_LENGTH 20
+#define KEYFRAME_ARRAY_LENGTH 20
 
 #define SHUTTER_DELAY 200
 
 #define INSTRUCTION_BYTES_PAN_SPEED 1
 #define INSTRUCTION_BYTES_TILT_SPEED 2
 #define INSTRUCTION_BYTES_PAN_TILT_SPEED 3
+#define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
 #define INSTRUCTION_STEP_MODE 'm'
-#define INSTRUCTION_PAN_STEPS 'P'
-#define INSTRUCTION_TILT_STEPS 'T'
 #define INSTRUCTION_PAN_DEGREES 'p'
 #define INSTRUCTION_TILT_DEGREES 't'
 #define INSTRUCTION_SET_HOME 'h'
 #define INSTRUCTION_ENABLE 'e'
-#define INSTRUCTION_SET_ACCELLERATION 'a'
 #define INSTRUCTION_SET_PAN_SPEED 's'
 #define INSTRUCTION_SET_TILT_SPEED 'S'
 #define INSTRUCTION_INVERT_PAN 'i'
@@ -72,29 +70,18 @@
 #define INSTRUCTION_SCALE_TILT_SPEED 'N'
 #define INSTRUCTION_SAVE_TO_EEPROM 'U'
 #define INSTRUCTION_PANORAMICLAPSE 'L'
-#define INSTRUCTION_ENABLE_LIMITS 'y'
-#define INSTRUCTION_PAN_MIN_LIMIT 'f'
-#define INSTRUCTION_PAN_MAX_LIMIT 'F'
-#define INSTRUCTION_TILT_MIN_LIMIT 'g'
-#define INSTRUCTION_TILT_MAX_LIMIT 'G'
-#define INSTRUCTION_SLIDER_MIN_LIMIT 'z'
-#define INSTRUCTION_SLIDER_MAX_LIMIT 'Z'
 #define INSTRUCTION_ANGLE_BETWEEN_PICTURES 'b'
 #define INSTRUCTION_DELAY_BETWEEN_PICTURES 'B'
 #define INSTRUCTION_TIMELAPSE 'l'
 #define INSTRUCTION_SLIDER_MILLIMETRES 'x'
 #define INSTRUCTION_INVERT_SLIDER 'j'
 #define INSTRUCTION_SET_SLIDER_SPEED 'X'
+#define INSTRUCTION_ORIBIT_POINT '@'
+#define INSTRUCTION_SLIDER_HOME 'Z'
 
 #define EEPROM_ADDRESS_ENABLE_HOMING 0
-#define EEPROM_ADDRESS_LIMIT_PAN_MIN 1
-#define EEPROM_ADDRESS_LIMIT_PAN_MAX 5
-#define EEPROM_ADDRESS_LIMIT_TILT_MIN 9
-#define EEPROM_ADDRESS_LIMIT_TILT_MAX 13
 #define EEPROM_ADDRESS_PAN_MAX_SPEED 17
 #define EEPROM_ADDRESS_TILT_MAX_SPEED 21
-#define EEPROM_ADDRESS_PAN_ACCELERATION 25
-#define EEPROM_ADDRESS_TILT_ACCELERATION 29
 #define EEPROM_ADDRESS_HALL_PAN_OFFSET 33
 #define EEPROM_ADDRESS_HALL_TILT_OFFSET 37
 #define EEPROM_ADDRESS_INVERT_PAN 41
@@ -102,27 +89,20 @@
 #define EEPROM_ADDRESS_MODE 43
 #define EEPROM_ADDRESS_DEGREES_PER_PICTURE 45
 #define EEPROM_ADDRESS_PANORAMICLAPSE_DELAY 49
-#define EEPROM_ADDRESS_ENABLE_LIMITS 53
-#define EEPROM_ADDRESS_PAN_MIN_LIMIT 54
-#define EEPROM_ADDRESS_PAN_MAX_LIMIT 58
-#define EEPROM_ADDRESS_TILT_MIN_LIMIT 62
-#define EEPROM_ADDRESS_TILT_MAX_LIMIT 66
 #define EEPROM_ADDRESS_SLIDER_MAX_SPEED 70
 #define EEPROM_ADDRESS_SLIDER_ACCELERATION 74
 #define EEPROM_ADDRESS_INVERT_SLIDER 78
-#define EEPROM_ADDRESS_SLIDER_MIN_LIMIT 79
-#define EEPROM_ADDRESS_SLIDER_MAX_LIMIT 83
 
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "3.0.2"
+#define VERSION_NUMBER "3.2.0"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-struct ArrayElement {
+struct KeyframeElement {
     long panStepCount = 0;
     float panSpeed = 0;
     long tiltStepCount = 0;
@@ -130,6 +110,19 @@ struct ArrayElement {
     long sliderStepCount = 0;
     float sliderSpeed = 0;
     int msDelay = 0;
+};
+
+struct FloatCoordinate {
+    float x;
+    float y;
+    float z;
+};
+
+struct LinePoints {
+    float x0;
+    float y0;
+    float x1;
+    float y1;
 };
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -154,14 +147,14 @@ float panStepsToDegrees(float);
 float tiltStepsToDegrees(long);
 float tiltStepsToDegrees(float);
 int addPosition(void);
-void clearArray(void);
+void clearKeyframes(void);
 void executeMoves(int);
 void moveToIndex(int);
-void gotoMovesArrayStart(void);
-void gotoMovesArrayEnd(void);
-void editMovesArrayIndex(void);
+void gotoFirstKeyframe(void);
+void gotoLastKeyframe(void);
+void editKeyframe(void);
 void addDelay(unsigned int ms);
-void printProgramElements(void);
+void printKeyframeElements(void);
 void saveEEPROM(void);
 void printEEPROM(void);
 void setEEPROMVariables(void);
@@ -171,19 +164,17 @@ int setTargetPositions(float, float);
 int setTargetPositions(float, float, float);
 void toggleAutoHoming(void);
 void triggerCameraShutter(void);
-void scaleMovesArrayPanMaxSpeed(float newMax);
-void scaleMovesArrayTiltMaxSpeed(float newMax);
 void ledBatteryLevel(float batteryPercentage);
-//int setTargetPositionsSteps(long panSteps, long tiltSteps);
 void panoramiclapseInterpolation(float, float, float, float, float, float, float, unsigned long);
 void panoramiclapse(float, unsigned long, int);
-void toggleEnableLimits(void);
-float sliderMillimetresToSteps(float);
+long sliderMillimetresToSteps(float);
 float sliderStepsToMillimetres(long);
 void sliderMoveTo(float);
-void scaleMovesArraySliderMaxSpeed(float);
 void invertSliderDirection(bool);
 void timelapse(unsigned int, unsigned long);
+bool calculateTargetCoordinate(void);
+void interpolateTargetPoint(FloatCoordinate);
+bool sliderHoming(void);
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
