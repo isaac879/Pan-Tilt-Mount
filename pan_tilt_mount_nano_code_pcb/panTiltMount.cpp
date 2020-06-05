@@ -814,9 +814,10 @@ bool calculateTargetCoordinate(void){
         intercept.x = (c2 - c1) / (m1 - m2);
         intercept.y = m1 * intercept.x + c1;
     }
-    intercept.z = tan(degToRads(tiltStepsToDegrees(keyframe_array[0].tiltStepCount))) * sqrt(pow(intercept.x, 2) + pow(intercept.y, 2));
+    intercept.z = tan(degToRads(tiltStepsToDegrees(keyframe_array[0].tiltStepCount))) * sqrt(pow(intercept.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount), 2) + pow(intercept.y, 2));
     if(((panStepsToDegrees(keyframe_array[0].panStepCount) > 0 && panStepsToDegrees(keyframe_array[1].panStepCount) > 0) && intercept.y < 0)
-    || ((panStepsToDegrees(keyframe_array[0].panStepCount) < 0 && panStepsToDegrees(keyframe_array[1].panStepCount) < 0) && intercept.y > 0)){
+    || ((panStepsToDegrees(keyframe_array[0].panStepCount) < 0 && panStepsToDegrees(keyframe_array[1].panStepCount) < 0) && intercept.y > 0) || intercept.y == 0){
+        printi(F("Invalid intercept.\n"));
         return false;
     }
     return true;
@@ -830,7 +831,6 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){
         return; //check there are posions to move to
     }
     
-    float increment = 1;
     float sliderStartPos = sliderStepsToMillimetres(keyframe_array[0].sliderStepCount); //slider start position
     float sliderEndPos = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount);
     float panAngle = 0;
@@ -838,9 +838,10 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){
     float x = targetPoint.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
     float ySqared = pow(targetPoint.y, 2);    
     float sliderTravel = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount) - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount);
-    unsigned int numberOfIncrements = sliderTravel / increment;
-
-    for(int j = 0; j < repeat; j++){
+    int numberOfIncrements = abs(sliderTravel);
+    float increment = sliderTravel / numberOfIncrements;//size of interpolation increments in mm
+    
+    for(int j = 0; (j < repeat || (repeat == 0 && j == 0)); j++){
         for(int i = 0; i <= numberOfIncrements; i++){
             x = targetPoint.x - (sliderStartPos + increment * i);
             panAngle = radsToDeg(atan2(targetPoint.y, x));
@@ -861,8 +862,10 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){
             setTargetPositions(panAngle, tiltAngle, sliderStartPos + increment * i);
             multi_stepper.runSpeedToPosition();//blocking move to the next position
         }
-        setTargetPositions(panAngle, tiltAngle, sliderStartPos);
-        multi_stepper.runSpeedToPosition();//blocking move to the next position   
+        if(repeat > 0){
+            setTargetPositions(panAngle, tiltAngle, sliderStartPos);
+            multi_stepper.runSpeedToPosition();//blocking move to the next position 
+        }     
     }
 }
 

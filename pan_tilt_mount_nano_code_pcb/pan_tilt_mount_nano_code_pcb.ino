@@ -18,18 +18,11 @@
  * 
  * Code written by isaac879
  * 
- * Last modified: 04/05/2020
+ * Last modified: 05/06/2020
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 //TODOs:
 //EEPROM values will need to be set after uploading the code and then a reset is required.
-
-/*----------Future development----------*/
-
-//program array in deg
-//Make an AT+ command set
-//report commands
-//Refactor code
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
