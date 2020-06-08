@@ -78,6 +78,7 @@
 #define INSTRUCTION_SET_SLIDER_SPEED 'X'
 #define INSTRUCTION_ORIBIT_POINT '@'
 #define INSTRUCTION_SLIDER_HOME 'Z'
+#define INSTRUCTION_CALCULATE_TARGET_POINT 'T'
 
 #define EEPROM_ADDRESS_ENABLE_HOMING 0
 #define EEPROM_ADDRESS_PAN_MAX_SPEED 17
@@ -98,7 +99,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "3.2.5"
+#define VERSION_NUMBER "3.2.7"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

@@ -260,25 +260,12 @@ void debugReport(void){
 //    printi(F("Pan current º/s: "), panStepsToDegrees(stepper_pan.speed()));
 //    printi(F("Tilt current º/s: "), tiltStepsToDegrees(stepper_tilt.speed()));
 //    printi(F("Slider current mm/s: "), sliderStepsToMillimetres(stepper_slider.speed()));  
-//    printi(F("Pan maximum steps/s: "), stepper_pan.maxSpeed());
-//    printi(F("Tilt maximum steps/s: "), stepper_tilt.maxSpeed());
-//    printi(F("Slider maximum steps/s: "), stepper_slider.maxSpeed());
+    printi(F("Pan max steps/s: "), stepper_pan.maxSpeed());
+    printi(F("Tilt max steps/s: "), stepper_tilt.maxSpeed());
+    printi(F("Slider max steps/s: "), stepper_slider.maxSpeed());
     printi(F("Pan max speed: "), panStepsToDegrees(stepper_pan.maxSpeed()), 3, F("º/s\n"));
     printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
-    printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));    
-//    printi(F("Pan acceleration steps/s/s: "), pan_acceleration);
-//    printi(F("Tilt acceleration steps/s/s: "), tilt_acceleration);
-//    printi(F("Slider acceleration steps/s/s: "), slider_acceleration);   
-//    printi(F("Pan acceleration º/s/s: "), panStepsToDegrees(pan_acceleration));
-//    printi(F("Tilt acceleration º/s/s: "), tiltStepsToDegrees(tilt_acceleration));
-//    printi(F("Slider acceleration mm/s/s: "), sliderStepsToMillimetres(slider_acceleration));    
-//    printi(F("Pan min limit: "), limit_pan_min, 3, F("º\n"));
-//    printi(F("Pan max limit: "), limit_pan_max, 3, F("º\n"));    
-//    printi(F("Tilt min limit: "), limit_tilt_min, 3, F("º\n"));
-//    printi(F("Tilt max limit: "), limit_tilt_max, 3, F("º\n"));
-//    printi(F("Slider min limit: "), limit_slider_min, 3, F("mm\n"));
-//    printi(F("Slider max limit: "), limit_slider_max, 3, F("mm\n"));
-//    printi(F("Enable limits: "), enable_limits);    
+    printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));        
 //    printi(F("Pan invert direction: "), invert_pan);
 //    printi(F("Tilt invert direction: "), invert_tilt);
 //    printi(F("Slider invert direction: "), invert_slider);
@@ -772,8 +759,10 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-bool calculateTargetCoordinate(void){
+//From the first two keyframes the intercept of where the camera is directed is calculated.
+//The first kayframe's x pan and tilt positions are used to calculate a 3D vector. The second keyframe's x and pan position are used to calculate a vertical plane. (It wuld be almost impossible for 2 3D vectors to intercept due to floating point precision issues.)
+//The intercept of the vectorand plane are then calculated to give the X, Y, Z coordinates of the point the camera was pointed at in both keyframes. (The second keyframe will ignore the tilt value and calculate it based on the first keyframes vector.)
+bool calculateTargetCoordinate(void){ 
     float m1, c1, m2, c2;
     
     LinePoints line0;
@@ -807,7 +796,7 @@ bool calculateTargetCoordinate(void){
         intercept.y = m1 * intercept.x + c1;
     }
     else{
-        if(m1 == m2){
+        if(m1 == m2){ //If the angle of the slope of both lines are the same they are parallel and cannot intercept.
             printi(F("Positions do not intersect."));
             return false;
         }
@@ -816,7 +805,7 @@ bool calculateTargetCoordinate(void){
     }
     intercept.z = tan(degToRads(tiltStepsToDegrees(keyframe_array[0].tiltStepCount))) * sqrt(pow(intercept.x - sliderStepsToMillimetres(keyframe_array[0].sliderStepCount), 2) + pow(intercept.y, 2));
     if(((panStepsToDegrees(keyframe_array[0].panStepCount) > 0 && panStepsToDegrees(keyframe_array[1].panStepCount) > 0) && intercept.y < 0)
-    || ((panStepsToDegrees(keyframe_array[0].panStepCount) < 0 && panStepsToDegrees(keyframe_array[1].panStepCount) < 0) && intercept.y > 0) || intercept.y == 0){
+    || ((panStepsToDegrees(keyframe_array[0].panStepCount) < 0 && panStepsToDegrees(keyframe_array[1].panStepCount) < 0) && intercept.y > 0) || intercept.y == 0){ //Checks that the intercept point is in the direction the camera was pointing and not on the opposite side behind the camera.
         printi(F("Invalid intercept.\n"));
         return false;
     }
@@ -825,7 +814,7 @@ bool calculateTargetCoordinate(void){
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){
+void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){ //The first two keyframes are interpolated between while keeping the camera pointing at previously calculated intercept point.
     if(keyframe_elements < 2){ 
         printi(F("Not enough keyframes recorded\n"));
         return; //check there are posions to move to
@@ -1109,11 +1098,16 @@ void serialData(void){
             stepper_slider.setMaxSpeed(sliderMillimetresToSteps(slider_max_speed));
         }
         break;
+        case INSTRUCTION_CALCULATE_TARGET_POINT:{            
+            if(calculateTargetCoordinate()){
+                printi("Target coordinates:\tx: ", intercept.x, 3, "\t");
+                printi("y: ", intercept.y, 3, "\t");
+                printi("z: ", intercept.z, 3, "mm\n");
+            }
+        }
+        break;  
         case INSTRUCTION_ORIBIT_POINT:{            
             if(calculateTargetCoordinate()){
-                printi("Target coordinates: \nx: ", intercept.x, 3, " mm\n");
-                printi("y: ", intercept.y, 3, " mm\n");
-                printi("z: ", intercept.z, 3, " mm\n");
                 interpolateTargetPoint(intercept, serialCommandValueInt);
             }
         }
