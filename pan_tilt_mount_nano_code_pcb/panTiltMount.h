@@ -66,8 +66,8 @@
 #define INSTRUCTION_EDIT_ARRAY 'E'
 #define INSTRUCTION_ADD_DELAY 'D'
 #define INSTRUCTION_CLEAR_ARRAY 'C'
-#define INSTRUCTION_SCALE_PAN_SPEED 'M'
-#define INSTRUCTION_SCALE_TILT_SPEED 'N'
+//#define INSTRUCTION_SCALE_PAN_SPEED 'M'
+//#define INSTRUCTION_SCALE_TILT_SPEED 'N'
 #define INSTRUCTION_SAVE_TO_EEPROM 'U'
 #define INSTRUCTION_PANORAMICLAPSE 'L'
 #define INSTRUCTION_ANGLE_BETWEEN_PICTURES 'b'
@@ -99,7 +99,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "3.2.7"
+#define VERSION_NUMBER "3.2.8"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
