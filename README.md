@@ -10,8 +10,16 @@ There are Hall effect sensors embedded in the pan and tilt axis to allow the ste
 
 Communicating with the Arduino is simply over a serial connection provided by the USB or JDY-31 serial pass-through Bluetooth module.
 
-The project video/demo: https://youtu.be/uJO7mv4-0PY
+As the continued development of this project I have now designed a slider for the pan tilt mount.
 
-Some picture, videos and development updates are available here: https://www.instagram.com/p/B-KXCTlj_CY/
+The slider is made from mostly 3d printed parts, M3 nuts and bolts and 2020 V-slot aluminium extrusion. It uses the same PCB I created for my pan tilt mount which is why I included an extra stepper driver and breakout for another Hall effect sensor.
 
-The CAD STL files are available here: https://www.thingiverse.com/thing:4316563
+The 2GT timing belt, 20 tooth timing pulley and 16th microstepping allow the slider to move with a precision of 0.0125mm. The movement speed can be set extremely slow for time-lapses or up to about 200mm/s (in full step mode).
+
+The pan tilt mount project video/demo: https://youtu.be/uJO7mv4-0PY
+The slider project video/demo: https://youtu.be/v1b7Wvu87-U
+
+Some picture, videos and development updates are available on my Instagram: https://www.instagram.com/isaac879/?hl=en
+
+The CAD STL and STEP files for the pan tilt mount are available here: https://www.thingiverse.com/thing:4316563
+The CAD STL and STEP files for the slider are available here: https://www.thingiverse.com/thing:4512714
