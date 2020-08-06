@@ -18,6 +18,8 @@
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+//#pragma comment(lib, "XInput.lib")   // Library. If your compiler doesn't support this type of lib include change to the corresponding one
+
 #define UP_BUTTON 1
 #define DOWN_BUTTON 2
 #define LEFT_BUTTON 4
@@ -36,8 +38,16 @@
 #define INSTRUCTION_BYTES_PAN_SPEED 1
 #define INSTRUCTION_BYTES_TILT_SPEED 2
 #define INSTRUCTION_BYTES_PAN_TILT_SPEED 3
+#define INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED 4
 
-#define INPUT_DEADZONE 1000
+#define INPUT_DEADZONE 4000
+
+#define MAXIMUM_PAN_STEP_SPEED 1130.0 //steps per second
+#define MAXIMUM_TILT_STEP_SPEED 410.0
+#define MAXIMUM_SLIDER_STEP_SPEED 900.0
+
+//triggers are 8 bit
+//analogsticks are 16bit
 
 //Flags
 bool portOpenFlag = false; //The flag used to determin if the serial port for the Arduino Nano is opened
@@ -200,6 +210,24 @@ int sendPanTiltStepSpeed(int command, int num){
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+int sendSliderPanTiltStepSpeed(int command, short *arr){
+	char data[7]; //Data array to send
+
+	data[0] = command;
+	data[1] = (arr[0] >> 8) & 0xFF; //Gets the most significant byte
+	data[2] = arr[0] & 0xFF; //Gets the second most significant byte
+	data[3] = (arr[1] >> 8) & 0xFF; 
+	data[4] = arr[1] & 0xFF; 
+	data[5] = (arr[2] >> 8) & 0xFF; 
+	data[6] = arr[2] & 0xFF; //Gets the least significant byte
+
+	serialWrite(data, sizeof(data)); //Send the command and the 6 bytes of data
+
+	return 0;
+}
+
+/*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 std::string getPortName(std::string filePath){
 	std::string line;
 	std::cout << "Reading port name from: " << filePath << std::endl;
@@ -221,7 +249,7 @@ std::string getPortName(std::string filePath){
 
 int panTiltInit(void){
 	//Connects to the com port that the Arduino is connected to.
-	for(int i = 0; (i < 5) && (serialConnect(getPortName("D:\\Documents\\Projects\\Pan Tilt Mount\\serial_port.txt").c_str()) != 0 ); i++){
+	for(int i = 0; (i < 5) && (serialConnect(getPortName("D:\\Documents\\Projects\\Pan Tilt Mount\\serial_port.txt").c_str()) != 0 ); i++){ //path to .txt files containing the name of the COM port. The file should contain "\\.\COM10" without quotes to connect to COM10
 		Sleep(1000);
 		if(i == 4){
 			std::cout << "Error: Unable to open serial port after 5 attempts..." << std::endl;
@@ -235,7 +263,7 @@ int panTiltInit(void){
 
 int main(void){
 	panTiltInit();
-
+	short shortVals[3] = {0, 0, 0};
 	DWORD dwResult;   
 	WORD lastwButtons = 0;
 	DWORD lastDwPacketNumber = 0;
@@ -247,46 +275,77 @@ int main(void){
 		if(dwResult == ERROR_SUCCESS){ //Controller is connected 
 			printf("Connected.\n");
 			while(1){
+				if (GetKeyState(VK_ESCAPE) & 0x8000) { //MSB is key state (1 if pressed). LSB is the toggle state
+					break;
+				}
+				if (GetKeyState(VK_F8) & 0x8000) {
+					char data[10];
+					std::cin.getline(data, 10);
+					std::cin.clear();
+					serialWrite(data, sizeof(data));
+				}
 				printIncomingData();
 				XInputGetState(i, &state);
 				//printf("dw packet number: %d\n", state.dwPacketNumber);
 				if(state.dwPacketNumber != lastDwPacketNumber){
-
+					short RXShort = 0;
+					short RYShort = 0;
+					short LXShort = 0;
 					float RX = state.Gamepad.sThumbRX; //Get right analog stick X value
-					if(abs(RX) < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE){
-						RX = 0;
-					}
-					else if(RX > 0){
-						RX -= XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
-					}
-					else if(RX < 0){
-						RX += XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
-					}
-					short RXShort = -(short(((float)RX * 2000.0) / (32767.0 - XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE))); //Normalise to a range of -2000 to 2000
-					
 					float RY = state.Gamepad.sThumbRY; //Get right analog stick Y value
-					if(abs(RY) < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE){
-						RY = 0;
-					}
-					else if(RY > 0){
-						RY -= XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
-					}
-					else if(RY < 0){
-						RY += XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
-					}
-					short RYShort = -(short(((float)RY * 2000.0) / (32767.0 - XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE))); //Normalise to a range of -2000 to 2000
+					float LX = state.Gamepad.sThumbLX; //Get left analog stick X value
+					float LY = state.Gamepad.sThumbLY; //Get left analog stick Y value
+					float magnitude = sqrt(RX * RX + RY * RY);
+					float magnitudeL = sqrt(LX * LX + LY * LY);
 
-					int RXRYInt = (RXShort << 16) + RYShort; //Combine both the X and Y 2 byte short values into one 4 byte int value
-					sendPanTiltStepSpeed(INSTRUCTION_BYTES_PAN_TILT_SPEED, RXRYInt); //send the combned X and Y values
+					float normalizedMagnitude = 0;
+					
+					if(magnitude > INPUT_DEADZONE){ //check if the controller is outside a circular dead zone
+						if(magnitude > 32767){ //clip the magnitude at its expected maximum value
+							magnitude = 32767;
+						}
+
+						normalizedMagnitude = magnitude / (32767 - INPUT_DEADZONE);
+						float scale = normalizedMagnitude / magnitude;
+						RXShort = -((RX * scale) * abs(RX * scale) * MAXIMUM_PAN_STEP_SPEED);
+						RYShort = -((RY * scale) * abs(RY * scale) * MAXIMUM_TILT_STEP_SPEED);
+					}
+					else{
+						RXShort = 0;
+						RYShort = 0;
+					}
+
+					float normalizedMagnitudeL = 0;
+					if(magnitudeL > INPUT_DEADZONE){ //check if the controller is outside a circular dead zone
+						if(magnitudeL > 32767){ //clip the magnitude at its expected maximum value
+							magnitudeL = 32767;
+						}
+
+						normalizedMagnitudeL = magnitudeL / (32767 - INPUT_DEADZONE);
+						float scale = normalizedMagnitudeL / magnitudeL;
+						LXShort = (LX * scale) * abs(LX * scale) * MAXIMUM_SLIDER_STEP_SPEED;
+					}
+					else{
+						LXShort = 0;
+					}
+
+					shortVals[0] = LXShort;
+					printf("LXShort: %d \n", LXShort);
+					shortVals[1] = RXShort;
+					printf("RXShort: %d \n", RXShort);
+					shortVals[2] = RYShort;
+					printf("RYShort: %d \n", RYShort);
+
+					sendSliderPanTiltStepSpeed(INSTRUCTION_BYTES_SLIDER_PAN_TILT_SPEED, shortVals); //send the combned values
 					Sleep(10);
 
 					if((lastwButtons & UP_BUTTON) < (state.Gamepad.wButtons & UP_BUTTON)){
 						printf("Up: %d \n", (state.Gamepad.wButtons & UP_BUTTON));
-						sendCharArray((char *)"["); //Up first element
+						sendCharArray((char *)"@"); //Up first element
 					}
 					if((lastwButtons & DOWN_BUTTON) < (state.Gamepad.wButtons & DOWN_BUTTON)){
 						printf("Down: %d \n", ((state.Gamepad.wButtons & UP_BUTTON) >> 1));
-						sendCharArray((char *)"]"); //down last element
+						sendCharArray((char *)"Z"); //down last element
 					}
 					if((lastwButtons & LEFT_BUTTON) < (state.Gamepad.wButtons & LEFT_BUTTON)){
 						printf("Left: %d \n", ((state.Gamepad.wButtons & LEFT_BUTTON) >> 2));
@@ -306,7 +365,7 @@ int main(void){
 					}
 					if((lastwButtons & L_BUTTON) < (state.Gamepad.wButtons & L_BUTTON)){
 						printf("L: %d \n", ((state.Gamepad.wButtons & L_BUTTON) >> 6));
-						sendCharArray((char *)"m4"); //step mode
+						sendCharArray((char *)"m2"); //half step mode
 					}
 					if((lastwButtons & R_BUTTON) < (state.Gamepad.wButtons & R_BUTTON)){
 						printf("R: %d \n", ((state.Gamepad.wButtons & R_BUTTON) >> 7));
