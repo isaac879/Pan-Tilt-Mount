@@ -31,7 +31,7 @@
 #define TILT_GEAR_RATIO 3.047619047619047619047619047619 //64/21 teeth
 
 #define MAX_STRING_LENGTH 10
-#define KEYFRAME_ARRAY_LENGTH 20
+#define KEYFRAME_ARRAY_LENGTH 35
 
 #define SHUTTER_DELAY 200
 
@@ -102,7 +102,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "Version: 3.9.4\n"
+#define VERSION_NUMBER "Version: 3.9.5\n"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

@@ -466,7 +466,7 @@ void moveToIndex(int index){
         float sliderInitialSpeed = stepper_slider.speed();
 
         if(index >= 1){
-            if(keyframe_array[index - 1].msDelay !p-29= 0){
+            if(keyframe_array[index - 1].msDelay != 0){
                 panInitialSpeed = 0;
                 tiltInitialSpeed = 0;
                 sliderInitialSpeed = 0;

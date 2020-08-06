@@ -18,7 +18,7 @@
  * 
  * Code written by isaac879
  * 
- * Last modified: 22/07/2020
+ * Last modified: 06/08/2020
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -27,9 +27,6 @@
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-//Future development:
-
-//Notes: note the same start/stop pos, setting accel vals,over/undershoot on changing direction/us delays, have not tested other step modes with accel
 //Comment code/more documentation
 //Efficiency improvements
 
