@@ -13,12 +13,21 @@
 #define PIN_ENABLE 12
 #define PIN_MS1 11
 #define PIN_MS2 10
-#define PIN_STEP_SLIDER 8
-#define PIN_DIRECTION_SLIDER 7
+
+//#define PIN_STEP_SLIDER 8
+//#define PIN_DIRECTION_SLIDER 7
+//#define PIN_STEP_TILT 6
+//#define PIN_DIRECTION_TILT 5
+//#define PIN_STEP_PAN 4
+//#define PIN_DIRECTION_PAN 3
+
+#define PIN_STEP_SLIDER 4
+#define PIN_DIRECTION_SLIDER 3
 #define PIN_STEP_TILT 6
 #define PIN_DIRECTION_TILT 5
-#define PIN_STEP_PAN 4
-#define PIN_DIRECTION_PAN 3
+#define PIN_STEP_PAN 8
+#define PIN_DIRECTION_PAN 7
+
 #define PIN_SLIDER_HALL 2
 
 #define HALF_STEP 2
@@ -102,7 +111,7 @@
 #define NUM_LEDS 1
 #define BRIGHTNESS 255
 
-#define VERSION_NUMBER "Version: 3.9.5\n"
+#define VERSION_NUMBER "Version: 3.9.7\n"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

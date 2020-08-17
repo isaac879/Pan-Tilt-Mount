@@ -75,17 +75,17 @@ void initPanTilt(void){
     multi_stepper.addStepper(stepper_tilt);
     multi_stepper.addStepper(stepper_slider);
     digitalWrite(PIN_ENABLE, LOW); //Enable the stepper drivers
-    if(homing_mode == 1){
-        printi(F("Homing\n"));
-        if(findHome()){
-            printi(F("Complete\n"));
-        }
-        else{
-            stepper_pan.setCurrentPosition(0);
-            stepper_tilt.setCurrentPosition(0);
-            printi(F("Error homing\n"));
-        }
-    }
+//    if(homing_mode == 1){
+//        printi(F("Homing\n"));
+//        if(findHome()){
+//            printi(F("Complete\n"));
+//        }
+//        else{
+//            stepper_pan.setCurrentPosition(0);
+//            stepper_tilt.setCurrentPosition(0);
+//            printi(F("Error homing\n"));
+//        }
+//    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
