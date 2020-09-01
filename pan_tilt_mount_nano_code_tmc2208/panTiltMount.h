@@ -5,30 +5,20 @@
 
 #define BAUD_RATE 57600
 
-#define PIN_LED_DATA A0
 #define PIN_SHUTTER_TRIGGER A1
 #define PIN_PAN_HALL A3
 #define PIN_TILT_HALL A4
+#define PIN_SLIDER_HALL 2
 #define PIN_INPUT_VOLTAGE A5
 #define PIN_ENABLE 12
 #define PIN_MS1 11
 #define PIN_MS2 10
-
-//#define PIN_STEP_SLIDER 8
-//#define PIN_DIRECTION_SLIDER 7
-//#define PIN_STEP_TILT 6
-//#define PIN_DIRECTION_TILT 5
-//#define PIN_STEP_PAN 4
-//#define PIN_DIRECTION_PAN 3
-
 #define PIN_STEP_SLIDER 4
 #define PIN_DIRECTION_SLIDER 3
 #define PIN_STEP_TILT 6
 #define PIN_DIRECTION_TILT 5
 #define PIN_STEP_PAN 8
 #define PIN_DIRECTION_PAN 7
-
-#define PIN_SLIDER_HALL 2
 
 #define HALF_STEP 2
 #define QUARTER_STEP 4
@@ -48,7 +38,6 @@
 #define INSTRUCTION_STEP_MODE 'm'
 #define INSTRUCTION_PAN_DEGREES 'p'
 #define INSTRUCTION_TILT_DEGREES 't'
-#define INSTRUCTION_SET_HOME 'h'
 #define INSTRUCTION_ENABLE 'e'
 #define INSTRUCTION_SET_PAN_SPEED 's'
 #define INSTRUCTION_SET_TILT_SPEED 'S'
@@ -60,8 +49,6 @@
 #define INSTRUCTION_TRIGGER_SHUTTER 'c'
 #define INSTRUCTION_AUTO_HOME 'A'
 #define INSTRUCTION_DEBUG_STATUS 'R'
-#define INSTRUCTION_PAN_RUN_SPEED 'k'
-#define INSTRUCTION_TILT_RUN_SPEED 'K'
 #define INSTRUCTION_EXECUTE_MOVES ';'
 #define INSTRUCTION_ADD_POSITION '#'
 #define INSTRUCTION_STEP_FORWARD '>'
@@ -106,12 +93,7 @@
 #define EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY 82
 #define EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY 84
 
-#define LED_TYPE WS2812B
-#define COLOR_ORDER GRB
-#define NUM_LEDS 1
-#define BRIGHTNESS 255
-
-#define VERSION_NUMBER "Version: 3.9.7\n"
+#define VERSION_NUMBER "Version: 3.9.8\n"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

@@ -884,7 +884,7 @@ void interpolateTargetPoint(FloatCoordinate targetPoint, int repeat){ //The firs
         printi(F("Not enough keyframes recorded\n"));
         return; //check there are posions to move to
     }
-    
+
     float sliderStartPos = sliderStepsToMillimetres(keyframe_array[0].sliderStepCount); //slider start position
     float sliderEndPos = sliderStepsToMillimetres(keyframe_array[1].sliderStepCount);
     float panAngle = 0;

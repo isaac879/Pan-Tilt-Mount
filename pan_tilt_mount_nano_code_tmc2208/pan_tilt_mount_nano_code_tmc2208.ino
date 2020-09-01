@@ -5,10 +5,10 @@
  * The code is developed for a 3D printed pan/tilt/slider mount for a Canon EOS 250D DSLR. It is controlled by an Arduino Nano, JDY-31 Bluetooth module, 
  * TMC2208 stepper motor drivers and some custom circuitry.
  * 
- * Pan Tilt Mount STL files: https://www.thingiverse.com/thing:4316563
+ * Pan Tilt Mount STL files: https://www.thingiverse.com/thing:4547074
  * 
- * Project videos: https://youtu.be/uJO7mv4-0PY
- *                 https://youtu.be/v1b7Wvu87-U
+ * Project video: https://youtu.be/1FfB7cLkUyQ
+ *                 
  * All measurements are in SI units unless otherwise specified.
  * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
@@ -18,7 +18,7 @@
  * 
  * Code written by isaac879
  * 
- * Last modified: 17/08/2020
+ * Last modified: 01/09/2020
  *
  *--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
