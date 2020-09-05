@@ -1,4 +1,4 @@
-# Pan-Tilt-Mount
+# 3-Axis Slider
 A stepper motor driven, 3D printed and Arduino Nano controlled 3-axis slider.
 
 Project Overview:
