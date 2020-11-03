@@ -25,9 +25,12 @@
 #define EIGHTH_STEP 8
 #define SIXTEENTH_STEP 16
 
-#define SLIDER_PULLEY_TEETH 36
+#define SLIDER_PULLEY_TEETH 36.0
 #define PAN_GEAR_RATIO 8.4705882352941176470588235294118 //144/17 teeth
-#define TILT_GEAR_RATIO 3.047619047619047619047619047619 //64/21 teeth
+//Used with the belt driven tilt axis.
+#define TILT_GEAR_RATIO 7.6875 //123/16 teeth
+//Used with herringbone gears
+//#define TILT_GEAR_RATIO 3.047619047619047619047619047619 //64/21 teeth
 
 #define MAX_STRING_LENGTH 10
 #define KEYFRAME_ARRAY_LENGTH 35
@@ -93,7 +96,7 @@
 #define EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY 82
 #define EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY 84
 
-#define VERSION_NUMBER "Version: 3.9.8\n"
+#define VERSION_NUMBER "Version: 3.11.2\n"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 

@@ -30,9 +30,9 @@ byte invert_pan = 0; //Variables to invert the direction of the axis. Note: Thes
 byte invert_tilt = 0;
 byte invert_slider = 0;
 byte homing_mode = 0; //Note: Gets set from the saved EEPROM value on startup 
-float pan_max_speed = 15; //degrees/second. Note: Gets set from the saved EEPROM value on startup. 
-float tilt_max_speed = 45; //degrees/second.
-float slider_max_speed = 15; //mm/second
+float pan_max_speed = 18; //degrees/second. Note: Gets set from the saved EEPROM value on startup. 
+float tilt_max_speed = 10; //degrees/second.
+float slider_max_speed = 20; //mm/second
 long target_position[3]; //Array to store stepper motor step counts
 float degrees_per_picture = 0.5; //Note: Gets set from the saved EEPROM value on startup. 
 unsigned long delay_ms_between_pictures = 1000; //Note: Gets set from the saved EEPROM value on startup. 
@@ -150,9 +150,9 @@ void setStepMode(int newMode){ //Step modes for the TMC2208
     stepper_tilt.setCurrentPosition(stepper_tilt.currentPosition() * stepRatio);
     stepper_slider.setCurrentPosition(stepper_slider.currentPosition() * stepRatio);
 
-    pan_steps_per_degree = (200.0 * newMode * PAN_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
-    tilt_steps_per_degree = (200.0 * newMode * TILT_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
-    slider_steps_per_millimetre = (200.0 * newMode) / (SLIDER_PULLEY_TEETH * 2); //Stepper motor has 200 steps per 360 degrees, the timing pully has 36 teeth and the belt has a pitch of 2mm
+    pan_steps_per_degree = (200.0 * (float)newMode * PAN_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
+    tilt_steps_per_degree = (200.0 * (float)newMode * TILT_GEAR_RATIO) / 360.0; //Stepper motor has 200 steps per 360 degrees
+    slider_steps_per_millimetre = (200.0 * (float)newMode) / (SLIDER_PULLEY_TEETH * 2.0); //Stepper motor has 200 steps per 360 degrees, the timing pully has 36 teeth and the belt has a pitch of 2mm
 
     stepper_pan.setMaxSpeed(panDegreesToSteps(pan_max_speed));
     stepper_tilt.setMaxSpeed(tiltDegreesToSteps(tilt_max_speed));
@@ -203,13 +203,13 @@ float tiltDegreesToSteps(float angle){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 long sliderMillimetresToSteps(float mm){
-    return mm * slider_steps_per_millimetre;
+    return round(mm * slider_steps_per_millimetre);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 float sliderStepsToMillimetres(long steps){
-    return steps / slider_steps_per_millimetre;
+    return (float)steps / slider_steps_per_millimetre;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -257,7 +257,8 @@ void debugReport(void){
     printi(F("Pan max speed: "), panStepsToDegrees(stepper_pan.maxSpeed()), 3, F("º/s\n"));
     printi(F("Tilt max speed: "), tiltStepsToDegrees(stepper_tilt.maxSpeed()), 3, F("º/s\n"));
     printi(F("Slider max speed: "), sliderStepsToMillimetres(stepper_slider.maxSpeed()), 3, F("mm/s\n"));        
-    printi(F("Battery: "), getBatteryPercentage(), 3, F("%\n"));
+    //printi(F("Battery: "), getBatteryPercentage(), 3, F("%\n"));
+    printi(F("Battery: "), getBatteryVoltage(), 3, F("V\n"));
 //    printi(F("Homing mode: "), homing_mode);    
     printi(F("Angle between pics: "), degrees_per_picture, 3, F("º\n"));
     printi(F("Panoramiclapse delay between pics: "), delay_ms_between_pictures, F("ms\n"));   
@@ -580,13 +581,13 @@ void executeMoves(int repeat){
         for(int row = 0; row < keyframe_elements; row++){
             moveToIndex(row);
         }
-        if(getBatteryVoltage() < 9.5){//9.5V is used as the cut off to allow for inaccuracies and be on the safe side.
-            delay(200);
-            if(getBatteryVoltage() < 9.5){//Check voltage is still low and the first wasn't a miscellaneous reading
-                printi(F("Battery low"));
-                while(1){}//loop and do nothing
-            }
-        }
+//        if(getBatteryVoltage() < 9.5){//9.5V is used as the cut off to allow for inaccuracies and be on the safe side.
+//            delay(200);
+//            if(getBatteryVoltage() < 9.5){//Check voltage is still low and the first wasn't a miscellaneous reading
+//                printi(F("Battery low"));
+//                while(1){}//loop and do nothing
+//            }
+//        }
     }
 }
 
@@ -774,8 +775,9 @@ void panoramiclapseInterpolation(float panStartAngle, float tiltStartAngle, floa
     for(int i = 0; i <= numberOfIncrements; i++){
         setTargetPositions(panStartAngle + (panInc * i), tiltStartAngle + (tiltInc * i), sliderStartPos + (sliderInc * i));
         multi_stepper.runSpeedToPosition();//blocking move to the next position
-        delay(msDelay);
+        delay(msDelay / 2);
         triggerCameraShutter();//capture the picture
+        delay(msDelay / 2);
     }
 }
 
@@ -800,6 +802,12 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
     if(msDelay > SHUTTER_DELAY){
         msDelay = msDelay - SHUTTER_DELAY;
     }
+    
+    if(numberOfPictures > 1){
+        numberOfPictures = numberOfPictures - 1;
+    }
+    
+    unsigned long halfDelay = msDelay / 2;
    
     float panAngle = 0;
     float tiltAngle = 0;
@@ -814,12 +822,16 @@ void timelapse(unsigned int numberOfPictures, unsigned long msDelay){
     float sliderInc = sliderTravel / numberOfPictures;
     float panInc = panAngle / numberOfPictures;
     float tiltInc = tiltAngle / numberOfPictures;
+
+    setTargetPositions(panStepsToDegrees(keyframe_array[0].panStepCount), tiltStepsToDegrees(keyframe_array[0].tiltStepCount), sliderStepsToMillimetres(keyframe_array[0].sliderStepCount));
+    multi_stepper.runSpeedToPosition();//blocking move to the next position
     
     for(int i = 0; i <= numberOfPictures; i++){
-        setTargetPositions(panStepsToDegrees(stepper_pan.currentPosition()) + (panInc * i), tiltStepsToDegrees(stepper_tilt.currentPosition()) + (tiltInc * i), sliderStepsToMillimetres(stepper_slider.currentPosition()) + (sliderInc * i));
+        setTargetPositions(panStepsToDegrees(keyframe_array[0].panStepCount) + (panInc * i), tiltStepsToDegrees(keyframe_array[0].tiltStepCount) + (tiltInc * i), sliderStepsToMillimetres(keyframe_array[0].sliderStepCount) + (sliderInc * i));
         multi_stepper.runSpeedToPosition();//blocking move to the next position
-        delay(msDelay);
+        delay(halfDelay);
         triggerCameraShutter();//capture the picture
+        delay(halfDelay);
     }
 }
 
