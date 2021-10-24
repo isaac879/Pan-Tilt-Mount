@@ -1206,10 +1206,15 @@ void serialData(void){
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 void mainLoop(void){
-    while(1){
-        if(Serial.available()) serialData();
-        multi_stepper.run();
-    }
+//    while(1){
+//        if(Serial.available()) serialData();
+//        multi_stepper.run();
+//    }
+
+    printi(F("Pan Hall: "), digitalRead(PIN_PAN_HALL));
+    printi(F("Tilt Hall: "), digitalRead(PIN_TILT_HALL));
+    printi(F("Slider Hall: "), digitalRead(PIN_SLIDER_HALL), "\n\n");
+    delay(200);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/

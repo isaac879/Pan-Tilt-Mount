@@ -96,7 +96,8 @@
 #define EEPROM_ADDRESS_TILT_ACCEL_INCREMENT_DELAY 82
 #define EEPROM_ADDRESS_SLIDER_ACCEL_INCREMENT_DELAY 84
 
-#define VERSION_NUMBER "Version: 3.11.2\n"
+//#define VERSION_NUMBER "Version: 3.11.2\n"
+#define VERSION_NUMBER "Version: Hall 1.0.0\n"
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
