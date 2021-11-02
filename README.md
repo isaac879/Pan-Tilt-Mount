@@ -21,4 +21,4 @@ The 3-Axis slider project video/demo: https://youtu.be/1FfB7cLkUyQ
 
 Some picture, videos and development updates are available on my Instagram: https://www.instagram.com/isaac879/
 
-The CAD STL and STEP files are available here: https://www.thingiverse.com/thing:4547074
+The CAD STL and STEP files are available here: https://www.thingiverse.com/thing:4547074 (with some files unchanged since earlier releases: https://www.thingiverse.com/thing:4512714 and https://www.thingiverse.com/thing:4316563)
