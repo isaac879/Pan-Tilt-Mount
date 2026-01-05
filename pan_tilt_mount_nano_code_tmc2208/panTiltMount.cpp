@@ -1,3 +1,28 @@
+/*
+ * ===================== CODE STRUCTURE MAP =====================
+ *
+ * This file controls a 2-axis stepper-driven pan/tilt mechanism.
+ * The code is organized by responsibility, not execution order.
+ *
+ * HOW TO READ THIS FILE:
+ * 1. setup()  -> hardware init, EEPROM restore, homing decision
+ * 2. loop()   -> main dispatcher; reacts to serial input and motion state
+ *
+ * MAJOR SECTIONS:
+ * - Global configuration & tuning parameters
+ * - Global runtime state flags
+ * - Serial command parsing and handling
+ * - Motion control helpers (pan / tilt / combined moves)
+ * - Homing routines
+ * - EEPROM save / restore
+ *
+ * NOTE:
+ * Functions are not called linearly; most are triggered by state flags
+ * or serial commands. This is normal for embedded control firmware.
+ *
+ * ==============================================================
+ */
+
 #include "PanTiltMount.h"
 #include <Iibrary.h> //A library I created for Arduino that contains some simple functions I commonly use. Library available at: https://github.com/isaac879/Iibrary
 #include <AccelStepper.h> //Library to control the stepper motors http://www.airspayce.com/mikem/arduino/AccelStepper/index.html
@@ -1213,3 +1238,4 @@ void mainLoop(void){
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
